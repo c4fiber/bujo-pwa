@@ -1,9 +1,10 @@
 import { NavLink } from 'react-router-dom'
 
 const tabs = [
-  { to: '/daily',    label: 'Daily',    icon: '◦' },
-  { to: '/monthly',  label: 'Monthly',  icon: '◈' },
   { to: '/future',   label: 'Future',   icon: '◎' },
+  { to: '/monthly',  label: 'Monthly',  icon: '◈' },
+  { to: '/daily',    label: 'Daily',    icon: '◦' },
+  { to: '/review',   label: 'Review',   icon: '≡' },
   { to: '/settings', label: 'Settings', icon: '⊙' },
 ]
 

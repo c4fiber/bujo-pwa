@@ -58,14 +58,14 @@ export function EntryComposer({ onAdd, placeholder = '내용 입력…', extraFi
             }
           }}
         />
-        {/* onMouseDown + preventDefault로 IME 조합 중 포커스 유지, onClick 대신 처리 */}
         <button
           onMouseDown={e => {
             e.preventDefault()
-            const trimmed = content.trim()
-            if (!trimmed || composingRef.current) return
-            onAdd(trimmed, bulletType)
-            setContent('')
+            submit()
+          }}
+          onTouchEnd={e => {
+            e.preventDefault()
+            submit()
           }}
           disabled={!content.trim()}
           className="text-xs text-zinc-500 hover:text-white disabled:opacity-30 transition-colors px-1"

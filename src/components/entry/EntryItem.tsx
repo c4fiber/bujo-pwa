@@ -15,8 +15,8 @@ interface Props {
   onContentChange?: (id: string, content: string) => void
   onDelete?: (id: string) => void
   onDelay?: (id: string, content: string, targetDate: string) => void
-  onUndoDelay?: (id: string, delayedMonthlyId?: string) => void
   onScheduleToFuture?: (id: string, content: string, bulletType: BulletType, targetYear: number, targetMonth: number) => void
+  onMigrateNext?: (id: string, content: string, bulletType: BulletType) => void
   readOnly?: boolean
 }
 
@@ -39,16 +39,16 @@ const bgColor: Record<EntryOrigin, string> = {
 
 export function EntryItem({
   entry, origin = 'manual',
-  onStatusChange, onContentChange, onDelete, onDelay, onUndoDelay, onScheduleToFuture, readOnly,
+  onStatusChange, onContentChange, onDelete, onDelay, onScheduleToFuture, onMigrateNext, readOnly,
 }: Props) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(entry.content)
   const [delayOpen, setDelayOpen] = useState(false)
   const [scheduleToFutureOpen, setScheduleToFutureOpen] = useState(false)
 
-  const isDelayed = !!(entry as DailyEntry).delayedMonthlyId
-  const canDelay = !!onDelay && entry.bulletType === 'task' && !isDelayed
+  const canDelay = !!onDelay && entry.bulletType === 'task'
   const canScheduleToFuture = !!onScheduleToFuture && entry.bulletType === 'task'
+  const canMigrateNext = !!onMigrateNext && entry.bulletType === 'task'
 
   const cycleStatus = () => {
     if (!onStatusChange || entry.bulletType !== 'task') return
@@ -62,13 +62,7 @@ export function EntryItem({
     }
   }
 
-  const handleBulletClick = () => {
-    if (isDelayed && onUndoDelay) {
-      onUndoDelay(entry.id, (entry as DailyEntry).delayedMonthlyId)
-    } else {
-      cycleStatus()
-    }
-  }
+  const handleBulletClick = () => cycleStatus()
 
   const commitEdit = () => {
     setEditing(false)
@@ -96,7 +90,7 @@ export function EntryItem({
         bulletType={entry.bulletType}
         taskStatus={entry.taskStatus}
         origin={origin}
-        deferred={isDelayed}
+        deferred={false}
         onClick={handleBulletClick}
       />
 
@@ -127,20 +121,32 @@ export function EntryItem({
 
       <div className="flex items-center gap-1 shrink-0">
         <OriginBadge origin={origin} />
-        {canDelay && (
+        {canMigrateNext && (
           <button
             className="opacity-40 hover:opacity-100 active:opacity-100 transition-opacity text-zinc-600 hover:text-accent-amber text-xs px-1 font-mono"
-            onClick={() => setDelayOpen(true)}
-            aria-label="delay"
+            onClick={() => onMigrateNext(entry.id, entry.content, entry.bulletType)}
+            aria-label="migrate to next month"
+            title="다음 달로 이월 >"
           >
-            &lt;
+            &gt;
+          </button>
+        )}
+        {canDelay && (
+          <button
+            className="opacity-40 hover:opacity-100 active:opacity-100 transition-opacity text-zinc-600 hover:text-accent-blue text-xs px-1 font-mono"
+            onClick={() => setDelayOpen(true)}
+            aria-label="schedule to monthly"
+            title="먼슬리로 예정 >"
+          >
+            &gt;
           </button>
         )}
         {canScheduleToFuture && (
           <button
-            className="opacity-40 hover:opacity-100 active:opacity-100 transition-opacity text-zinc-600 hover:text-accent-amber text-xs px-1 font-mono"
+            className="opacity-40 hover:opacity-100 active:opacity-100 transition-opacity text-zinc-600 hover:text-accent-green text-xs px-1 font-mono"
             onClick={() => setScheduleToFutureOpen(true)}
             aria-label="schedule to future"
+            title="퓨처 로그로 예약 <"
           >
             &lt;
           </button>

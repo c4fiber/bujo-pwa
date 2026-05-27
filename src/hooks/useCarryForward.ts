@@ -5,7 +5,7 @@ import {
 import { nanoid } from 'nanoid'
 import { firestore } from '../lib/firebase'
 import { useAuthStore } from '../store/authStore'
-import { toDateString, parseDate } from '../utils/dateUtils'
+import { toDateString, parseDate, prevDay } from '../utils/dateUtils'
 import type { DailyEntry } from '../types/journal'
 
 let inProgress: Promise<void> | null = null
@@ -38,12 +38,12 @@ async function dedupeMigrated(journalId: string) {
 }
 
 async function runCarryForward(journalId: string, today: string) {
-  // 오늘 이전의 open task 전체 조회 (origin 무관)
+  const yesterday = prevDay(today)
   const openSnap = await getDocs(query(
     collection(firestore, `journals/${journalId}/dailyLogs`),
     where('bulletType', '==', 'task'),
     where('taskStatus', '==', 'open'),
-    where('date', '<', today),
+    where('date', '==', yesterday),
   ))
   if (openSnap.empty) return
 

@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react'
 import {
-  collection, deleteField, doc, onSnapshot, query,
+  collection, doc, onSnapshot, query,
   setDoc, updateDoc, deleteDoc, where,
 } from 'firebase/firestore'
 import { firestore } from '../lib/firebase'
 import { useAuthStore } from '../store/authStore'
 import type { BulletType, DailyEntry, TaskStatus } from '../types/journal'
-import { createDailyEntry, createMonthlyEntry } from '../utils/entryUtils'
-import { parseDate } from '../utils/dateUtils'
+import { createDailyEntry, createFutureEntry } from '../utils/entryUtils'
 
 export function useDailyLog(date: string) {
   const { uid, journalId } = useAuthStore()
@@ -53,31 +52,16 @@ export function useDailyLog(date: string) {
     await deleteDoc(doc(firestore, `journals/${journalId}/dailyLogs/${id}`))
   }
 
-  // task를 특정 날짜로 연기: Daily는 open 유지, Monthly에 사본 생성
-  const delayTask = async (id: string, content: string, targetDate: string) => {
+  // < (Scheduled): Daily task → Future Log
+  const scheduleToFuture = async (id: string, content: string, bulletType: BulletType, targetYear: number, targetMonth: number) => {
     if (!uid) return
-    const { year, month } = parseDate(targetDate)
-
-    const monthly = createMonthlyEntry(content, 'task', year, month, targetDate)
-    await setDoc(doc(firestore, `journals/${journalId}/monthlyLogs/${monthly.id}`), monthly)
-
+    const future = createFutureEntry(content, bulletType, targetYear, targetMonth)
+    await setDoc(doc(firestore, `journals/${journalId}/futureLogs/${future.id}`), future)
     await updateDoc(doc(firestore, `journals/${journalId}/dailyLogs/${id}`), {
-      delayedMonthlyId: monthly.id,
+      taskStatus: 'scheduled',
       updatedAt: new Date().toISOString(),
     })
   }
 
-  // 연기 취소: Monthly 사본 삭제 + Daily delayedMonthlyId 제거
-  const undoDelayTask = async (id: string, delayedMonthlyId?: string) => {
-    if (!uid) return
-    if (delayedMonthlyId) {
-      await deleteDoc(doc(firestore, `journals/${journalId}/monthlyLogs/${delayedMonthlyId}`))
-    }
-    await updateDoc(doc(firestore, `journals/${journalId}/dailyLogs/${id}`), {
-      delayedMonthlyId: deleteField(),
-      updatedAt: new Date().toISOString(),
-    })
-  }
-
-  return { entries, addEntry, updateStatus, updateContent, deleteEntry, delayTask, undoDelayTask }
+  return { entries, addEntry, updateStatus, updateContent, deleteEntry, scheduleToFuture }
 }

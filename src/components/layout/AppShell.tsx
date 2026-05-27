@@ -2,13 +2,9 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { TopBar } from './TopBar'
 import { BottomNav } from './BottomNav'
-import { useSyncMonthlyToDaily } from '../../hooks/useSyncMonthlyToDaily'
 import { useCarryForward } from '../../hooks/useCarryForward'
-import { useUIStore } from '../../store/uiStore'
 
 export function AppShell() {
-  const { activeYear } = useUIStore()
-  useSyncMonthlyToDaily(activeYear)
   useCarryForward()
   const location = useLocation()
 
