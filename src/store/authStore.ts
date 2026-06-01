@@ -25,14 +25,26 @@ interface AuthStore {
 
 const COLLECTIONS = ['dailyLogs', 'monthlyLogs', 'futureLogs'] as const
 
-// 두 journalId 간 데이터 병합 (from → to, 덮어쓰지 않음)
-async function mergeJournals(fromId: string, toId: string) {
+type JournalSnapshot = Record<string, { id: string; data: any }[]>
+
+// 현재 권한으로 로컬 저널 전체 읽어오기
+async function snapshotJournal(journalId: string): Promise<JournalSnapshot> {
+  const result: JournalSnapshot = {}
   for (const col of COLLECTIONS) {
-    const snap = await getDocs(collection(firestore, `journals/${fromId}/${col}`))
-    if (snap.empty) continue
+    const snap = await getDocs(collection(firestore, `journals/${journalId}/${col}`))
+    result[col] = snap.docs.map(d => ({ id: d.id, data: d.data() }))
+  }
+  return result
+}
+
+// 메모리에 보관된 스냅샷을 toId 경로로 기록
+async function writeSnapshot(snapshot: JournalSnapshot, toId: string) {
+  for (const col of COLLECTIONS) {
+    const docs = snapshot[col]
+    if (!docs?.length) continue
     const wb = writeBatch(firestore)
-    snap.docs.forEach(d =>
-      wb.set(doc(firestore, `journals/${toId}/${col}/${d.id}`), d.data())
+    docs.forEach(({ id, data }) =>
+      wb.set(doc(firestore, `journals/${toId}/${col}/${id}`), data)
     )
     await wb.commit()
   }
@@ -70,6 +82,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         const credential = GoogleAuthProvider.credentialFromError(err)!
         set({ migrating: true })
         try {
+          // 1. 익명 권한 유지된 상태에서 로컬 저널 전체 스냅샷
+          const localSnapshot = await snapshotJournal(localJournalId)
+
+          // 2. Google 계정으로 sign-in (uid 변경됨)
           const result = await signInWithCredential(auth, credential)
           const newUid = result.user.uid
           const profileRef = doc(firestore, `userJournals/${newUid}`)
@@ -78,8 +94,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           if (profileSnap.exists()) {
             const cloudJournalId = profileSnap.data().journalId as string
             if (cloudJournalId !== localJournalId) {
-              // 로컬 데이터를 클라우드 journalId로 병합 후 로컬 업데이트
-              await mergeJournals(localJournalId, cloudJournalId)
+              // 3. 스냅샷을 클라우드 journalId로 기록 (newUid가 cloudJournalId 소유자라 권한 OK)
+              await writeSnapshot(localSnapshot, cloudJournalId)
               setJournalId(cloudJournalId)
               set({ journalId: cloudJournalId })
             }
