@@ -2,8 +2,6 @@
 
 Bullet Journal PWA — Firebase + React + TypeScript
 
-test on https://bujo-pwa.web.app/daily
-
 ## 기능
 
 - **Daily Log**: 오늘의 할 일, 메모, 이벤트를 빠르게 기록
