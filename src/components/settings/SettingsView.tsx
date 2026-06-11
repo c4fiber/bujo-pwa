@@ -1,12 +1,21 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useAuthStore } from '../../store/authStore'
+import { useSyncStore } from '../../store/syncStore'
 
 export function SettingsView() {
-  const { isAnonymous, displayName, email, photoURL, migrating, linkWithGoogle, signOut } =
+  const { isAnonymous, displayName, email, photoURL, migrating, linkWithGoogle, signOut, journalId } =
     useAuthStore()
+  const { lastSyncedAt, syncing, syncError, sync, canSync, nextSyncAvailableAt } = useSyncStore()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [, forceUpdate] = useState(0)
+
+  // 쿨다운 카운트다운 갱신
+  useEffect(() => {
+    const id = setInterval(() => forceUpdate(n => n + 1), 10_000)
+    return () => clearInterval(id)
+  }, [])
 
   const handleLinkGoogle = async () => {
     setError(null)
@@ -109,7 +118,80 @@ export function SettingsView() {
           Google 계정을 연결하면 기존 데이터가 유지된 채로 기기 간 동기화가 활성화됩니다.
         </p>
       )}
+
+      {/* 동기화 카드 */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+        className="bg-surface-1 rounded-xl p-4 flex flex-col gap-3 border border-surface-2"
+      >
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-mono text-zinc-500 tracking-widest uppercase">Sync</span>
+          {syncing && <span className="text-xs text-accent-blue animate-pulse">동기화 중…</span>}
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs text-zinc-400">마지막 동기화</p>
+            <p className="text-sm text-white mt-0.5">
+              {lastSyncedAt ? formatRelative(lastSyncedAt) : '동기화 기록 없음'}
+            </p>
+          </div>
+          <button
+            onClick={() => sync(journalId)}
+            disabled={!canSync() || syncing}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-2 text-xs text-zinc-300 hover:bg-surface-3 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            <SyncIcon spinning={syncing} />
+            지금 동기화
+          </button>
+        </div>
+
+        {/* 쿨다운 안내 */}
+        {nextSyncAvailableAt() !== null && (
+          <p className="text-[11px] text-zinc-600">
+            다음 동기화 가능: {formatRelative(nextSyncAvailableAt()!)}
+            &nbsp;(10분 제한)
+          </p>
+        )}
+
+        {/* 동기화 에러 */}
+        {syncError && (
+          <p className="text-xs text-red-400 bg-red-950/30 border border-red-900/40 rounded-lg px-3 py-2">
+            {syncError}
+          </p>
+        )}
+      </motion.div>
     </div>
+  )
+}
+
+function formatRelative(epochMs: number): string {
+  const diff = Date.now() - epochMs
+  if (diff < 0) {
+    const abs = Math.abs(diff)
+    const mins = Math.ceil(abs / 60_000)
+    return `${mins}분 후`
+  }
+  if (diff < 60_000) return '방금 전'
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}분 전`
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}시간 전`
+  return new Date(epochMs).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
+
+function SyncIcon({ spinning }: { spinning: boolean }) {
+  return (
+    <svg
+      width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+      className={spinning ? 'animate-spin' : ''}
+    >
+      <path d="M21 2v6h-6" />
+      <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+      <path d="M3 22v-6h6" />
+      <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+    </svg>
   )
 }
 
