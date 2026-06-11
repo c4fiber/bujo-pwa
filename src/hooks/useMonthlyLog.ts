@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import {
-  collection, doc, onSnapshot, query,
-  setDoc, updateDoc, deleteDoc, where,
+  collection, doc, onSnapshot, query, where,
 } from 'firebase/firestore'
 import { firestore } from '../lib/firebase'
+import { setDoc, updateDoc, deleteDoc } from '../lib/syncedFirestore'
 import { useAuthStore } from '../store/authStore'
 import type { BulletType, MonthlyEntry, TaskStatus } from '../types/journal'
 import { createMonthlyEntry, createFutureEntry, createDailyEntry } from '../utils/entryUtils'

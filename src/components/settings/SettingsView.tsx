@@ -4,9 +4,10 @@ import { useAuthStore } from '../../store/authStore'
 import { useSyncStore } from '../../store/syncStore'
 
 export function SettingsView() {
-  const { isAnonymous, displayName, email, photoURL, migrating, linkWithGoogle, signOut, journalId } =
+  const { isAnonymous, displayName, email, photoURL, migrating, linkWithGoogle, signOut } =
     useAuthStore()
-  const { lastSyncedAt, syncing, syncError, sync, canSync, nextSyncAvailableAt } = useSyncStore()
+  const { lastSyncedAt, syncing, syncError, pendingAutoSync, manualSync, canManualSync, nextManualSyncAt } =
+    useSyncStore()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [, forceUpdate] = useState(0)
@@ -128,7 +129,11 @@ export function SettingsView() {
       >
         <div className="flex items-center justify-between">
           <span className="text-xs font-mono text-zinc-500 tracking-widest uppercase">Sync</span>
-          {syncing && <span className="text-xs text-accent-blue animate-pulse">동기화 중…</span>}
+          {syncing ? (
+            <span className="text-xs text-accent-blue animate-pulse">동기화 중…</span>
+          ) : pendingAutoSync ? (
+            <span className="text-xs text-zinc-500">자동 동기화 대기 중</span>
+          ) : null}
         </div>
 
         <div className="flex items-center justify-between">
@@ -139,8 +144,8 @@ export function SettingsView() {
             </p>
           </div>
           <button
-            onClick={() => sync(journalId)}
-            disabled={!canSync() || syncing}
+            onClick={() => manualSync()}
+            disabled={!canManualSync() || syncing}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-2 text-xs text-zinc-300 hover:bg-surface-3 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             <SyncIcon spinning={syncing} />
@@ -148,13 +153,16 @@ export function SettingsView() {
           </button>
         </div>
 
-        {/* 쿨다운 안내 */}
-        {nextSyncAvailableAt() !== null && (
+        {/* 수동 동기화 쿨다운 안내 */}
+        {nextManualSyncAt() !== null && (
           <p className="text-[11px] text-zinc-600">
-            다음 동기화 가능: {formatRelative(nextSyncAvailableAt()!)}
-            &nbsp;(10분 제한)
+            수동 동기화 가능: {formatRelative(nextManualSyncAt()!)} (10분에 1회)
           </p>
         )}
+
+        <p className="text-[11px] text-zinc-600 leading-relaxed">
+          변경 사항은 입력이 멈춘 뒤 3분 후 자동으로 동기화됩니다.
+        </p>
 
         {/* 동기화 에러 */}
         {syncError && (
