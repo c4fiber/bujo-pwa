@@ -6,7 +6,7 @@ import { EntryComposer } from '../../entry/EntryComposer'
 import { formatDisplay, nextDay, prevDay } from '../../../utils/dateUtils'
 export function DailyLogView() {
   const { activeDate, setActiveDate } = useUIStore()
-  const { entries, addEntry, updateStatus, updateContent, deleteEntry, scheduleToFuture } = useDailyLog(activeDate)
+  const { entries, addEntry, updateStatus, updateContent, deleteEntry, scheduleToMonthly } = useDailyLog(activeDate)
 
   const manualEntries   = entries.filter(e => e.origin === 'manual')
   const migratedEntries = entries.filter(e => e.origin === 'migrated')
@@ -33,7 +33,7 @@ export function DailyLogView() {
               onStatusChange={updateStatus}
               onContentChange={updateContent}
               onDelete={deleteEntry}
-              onScheduleToFuture={scheduleToFuture}
+              onScheduleToMonthly={scheduleToMonthly}
             />
           ))}
         </AnimatePresence>

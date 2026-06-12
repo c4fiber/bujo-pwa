@@ -7,7 +7,7 @@ import { firestore } from '../lib/firebase'
 import { useAuthStore } from '../store/authStore'
 import type { BulletType, MonthlyEntry, TaskStatus } from '../types/journal'
 import { createMonthlyEntry, createFutureEntry, createDailyEntry } from '../utils/entryUtils'
-import { nextMonth } from '../utils/dateUtils'
+import { parseDate } from '../utils/dateUtils'
 
 export function useMonthlyLog(year: number, month: number) {
   const { uid, journalId } = useAuthStore()
@@ -35,7 +35,11 @@ export function useMonthlyLog(year: number, month: number) {
 
   const addEntry = async (content: string, bulletType: BulletType, scheduledDate?: string) => {
     if (!uid) return
-    const entry = createMonthlyEntry(content, bulletType, year, month, scheduledDate)
+    // 날짜를 선택한 경우 해당 날짜의 year/month로 monthly 항목을 생성한다.
+    // 선택하지 않으면 현재 뷰의 year/month 사용.
+    const { year: entryYear, month: entryMonth } =
+      scheduledDate ? parseDate(scheduledDate) : { year, month }
+    const entry = createMonthlyEntry(content, bulletType, entryYear, entryMonth, scheduledDate)
     await setDoc(doc(firestore, `journals/${journalId}/monthlyLogs/${entry.id}`), entry)
     if (scheduledDate) {
       const daily = createDailyEntry(content, bulletType, scheduledDate)
@@ -79,17 +83,16 @@ export function useMonthlyLog(year: number, month: number) {
     })
   }
 
-  // > (Migrated): Monthly task → next month's Monthly Log
-  const migrateToNextMonth = async (id: string, content: string, bulletType: BulletType) => {
+  // > (Migrate to Daily): Monthly task → 오늘의 Daily Log (한 단계 오른쪽)
+  const migrateToDaily = async (id: string, content: string, bulletType: BulletType, targetDate: string) => {
     if (!uid) return
-    const { year: ny, month: nm } = nextMonth(year, month)
-    const next = createMonthlyEntry(content, bulletType, ny, nm)
-    await setDoc(doc(firestore, `journals/${journalId}/monthlyLogs/${next.id}`), next)
+    const daily = createDailyEntry(content, bulletType, targetDate)
+    await setDoc(doc(firestore, `journals/${journalId}/dailyLogs/${daily.id}`), daily)
     await updateDoc(doc(firestore, `journals/${journalId}/monthlyLogs/${id}`), {
       taskStatus: 'migrated',
       updatedAt: new Date().toISOString(),
     })
   }
 
-  return { entries, addEntry, updateStatus, updateContent, setScheduledDate, deleteEntry, scheduleToFuture, migrateToNextMonth }
+  return { entries, addEntry, updateStatus, updateContent, setScheduledDate, deleteEntry, scheduleToFuture, migrateToDaily }
 }
