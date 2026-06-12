@@ -80,7 +80,7 @@ export function MonthlyLogView() {
                       className="text-[10px] font-mono bg-transparent text-zinc-500 border-none outline-none"
                       value={entry.scheduledDate ?? ''}
                       onChange={e => setScheduledDate(entry.id, e.target.value || undefined)}
-                      title="예정일 변경 (메모용)"
+                      title="날짜 변경"
                     />
                   </div>
                 </div>
