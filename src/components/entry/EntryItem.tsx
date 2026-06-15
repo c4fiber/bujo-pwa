@@ -14,14 +14,14 @@ interface Props {
   onStatusChange?: (id: string, status: TaskStatus) => void
   onContentChange?: (id: string, content: string) => void
   onDelete?: (id: string) => void
-  // < : Daily → Monthly (날짜 선택)
+  // < : Daily → Monthly (월+일 선택)
   onScheduleToMonthly?: (id: string, content: string, bulletType: BulletType, targetDate: string) => void
-  // < : Monthly → Future (year/month 선택)
+  // < : Monthly → Future (연+월 선택, 일 없음)
   onScheduleToFuture?: (id: string, content: string, bulletType: BulletType, targetYear: number, targetMonth: number) => void
-  // > : Monthly → Daily (날짜 선택)
+  // > : Monthly → Daily (월+일 선택)
   onMigrateToDaily?: (id: string, content: string, bulletType: BulletType, targetDate: string) => void
-  // > : Future → Monthly (날짜 선택)
-  onDelay?: (id: string, content: string, targetDate: string) => void
+  // > : Future → Monthly (연+월 선택, 일 없음)
+  onScheduleToMonthlyFromFuture?: (id: string, content: string, bulletType: BulletType, targetYear: number, targetMonth: number) => void
   readOnly?: boolean
 }
 
@@ -45,7 +45,7 @@ const bgColor: Record<EntryOrigin, string> = {
 export function EntryItem({
   entry, origin = 'manual',
   onStatusChange, onContentChange, onDelete,
-  onScheduleToMonthly, onScheduleToFuture, onMigrateToDaily, onDelay,
+  onScheduleToMonthly, onScheduleToFuture, onMigrateToDaily, onScheduleToMonthlyFromFuture,
   readOnly,
 }: Props) {
   const [editing, setEditing] = useState(false)
@@ -53,12 +53,12 @@ export function EntryItem({
   const [scheduleToMonthlyOpen, setScheduleToMonthlyOpen] = useState(false)
   const [scheduleToFutureOpen, setScheduleToFutureOpen] = useState(false)
   const [migrateToDailyOpen, setMigrateToDailyOpen] = useState(false)
-  const [delayOpen, setDelayOpen] = useState(false)
+  const [scheduleToMonthlyFromFutureOpen, setScheduleToMonthlyFromFutureOpen] = useState(false)
 
   const canScheduleToMonthly = !!onScheduleToMonthly && entry.bulletType === 'task'
   const canScheduleToFuture = !!onScheduleToFuture && entry.bulletType === 'task'
   const canMigrateToDaily = !!onMigrateToDaily && entry.bulletType === 'task'
-  const canDelay = !!onDelay && entry.bulletType === 'task'
+  const canScheduleToMonthlyFromFuture = !!onScheduleToMonthlyFromFuture && entry.bulletType === 'task'
 
   const cycleStatus = () => {
     if (!onStatusChange || entry.bulletType !== 'task') return
@@ -131,45 +131,41 @@ export function EntryItem({
 
       <div className="flex items-center gap-1 shrink-0">
         <OriginBadge origin={origin} />
-        {/* > : Monthly → Daily (오른쪽 탭으로 이동) */}
+        {/* > : Monthly → Daily (월+일 선택) */}
         {canMigrateToDaily && (
           <button
             className="opacity-40 hover:opacity-100 active:opacity-100 transition-opacity text-zinc-600 hover:text-accent-amber text-xs px-1 font-mono"
             onClick={() => setMigrateToDailyOpen(true)}
-            aria-label="migrate to daily"
             title="Daily로 이동 >"
           >
             &gt;
           </button>
         )}
-        {/* > : Future → Monthly (오른쪽 탭으로 이동) */}
-        {canDelay && (
+        {/* > : Future → Monthly (연+월 선택) */}
+        {canScheduleToMonthlyFromFuture && (
           <button
             className="opacity-40 hover:opacity-100 active:opacity-100 transition-opacity text-zinc-600 hover:text-accent-blue text-xs px-1 font-mono"
-            onClick={() => setDelayOpen(true)}
-            aria-label="schedule to monthly"
+            onClick={() => setScheduleToMonthlyFromFutureOpen(true)}
             title="Monthly로 이동 >"
           >
             &gt;
           </button>
         )}
-        {/* < : Daily → Monthly (왼쪽 탭으로 이동) */}
+        {/* < : Daily → Monthly (월+일 선택) */}
         {canScheduleToMonthly && (
           <button
             className="opacity-40 hover:opacity-100 active:opacity-100 transition-opacity text-zinc-600 hover:text-accent-blue text-xs px-1 font-mono"
             onClick={() => setScheduleToMonthlyOpen(true)}
-            aria-label="schedule to monthly"
             title="Monthly로 예정 <"
           >
             &lt;
           </button>
         )}
-        {/* < : Monthly → Future (왼쪽 탭으로 이동) */}
+        {/* < : Monthly → Future (연+월 선택) */}
         {canScheduleToFuture && (
           <button
             className="opacity-40 hover:opacity-100 active:opacity-100 transition-opacity text-zinc-600 hover:text-accent-green text-xs px-1 font-mono"
             onClick={() => setScheduleToFutureOpen(true)}
-            aria-label="schedule to future"
             title="Future로 예약 <"
           >
             &lt;
@@ -186,7 +182,7 @@ export function EntryItem({
         )}
       </div>
 
-      {/* Daily → Monthly */}
+      {/* Daily → Monthly (월+일 선택) */}
       {canScheduleToMonthly && (
         <DelayDialog
           open={scheduleToMonthlyOpen}
@@ -194,15 +190,15 @@ export function EntryItem({
           onClose={() => setScheduleToMonthlyOpen(false)}
         />
       )}
-      {/* Monthly → Future */}
+      {/* Monthly → Future (연+월 선택) */}
       {canScheduleToFuture && (
         <ScheduleToFutureDialog
           open={scheduleToFutureOpen}
-          onConfirm={(targetYear, targetMonth) => onScheduleToFuture(entry.id, entry.content, entry.bulletType, targetYear, targetMonth)}
+          onConfirm={(y, m) => onScheduleToFuture(entry.id, entry.content, entry.bulletType, y, m)}
           onClose={() => setScheduleToFutureOpen(false)}
         />
       )}
-      {/* Monthly → Daily */}
+      {/* Monthly → Daily (월+일 선택) */}
       {canMigrateToDaily && (
         <DelayDialog
           open={migrateToDailyOpen}
@@ -210,12 +206,12 @@ export function EntryItem({
           onClose={() => setMigrateToDailyOpen(false)}
         />
       )}
-      {/* Future → Monthly */}
-      {canDelay && (
-        <DelayDialog
-          open={delayOpen}
-          onConfirm={targetDate => onDelay(entry.id, entry.content, targetDate)}
-          onClose={() => setDelayOpen(false)}
+      {/* Future → Monthly (연+월 선택) */}
+      {canScheduleToMonthlyFromFuture && (
+        <ScheduleToFutureDialog
+          open={scheduleToMonthlyFromFutureOpen}
+          onConfirm={(y, m) => onScheduleToMonthlyFromFuture(entry.id, entry.content, entry.bulletType, y, m)}
+          onClose={() => setScheduleToMonthlyFromFutureOpen(false)}
         />
       )}
     </motion.div>
