@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import {
-  collection, doc, onSnapshot, query,
-  setDoc, updateDoc, deleteDoc, where,
+  collection, doc, onSnapshot, query, where,
 } from 'firebase/firestore'
 import { firestore } from '../lib/firebase'
+import { setDoc, updateDoc, deleteDoc } from '../lib/syncedFirestore'
 import { useAuthStore } from '../store/authStore'
 import type { BulletType, MonthlyEntry, TaskStatus } from '../types/journal'
-import { createMonthlyEntry, createFutureEntry, createDailyEntry } from '../utils/entryUtils'
-import { parseDate } from '../utils/dateUtils'
+import { createMonthlyEntry, createFutureEntry } from '../utils/entryUtils'
+import { nextMonth } from '../utils/dateUtils'
 
 export function useMonthlyLog(year: number, month: number) {
   const { uid, journalId } = useAuthStore()
@@ -33,6 +33,8 @@ export function useMonthlyLog(year: number, month: number) {
     })
   }, [uid, journalId, year, month])
 
+  // 선택한 날짜를 월간 항목의 단일 날짜(scheduledDate)로 저장.
+  // 별도의 Daily 항목을 중복 생성하지 않는다.
   const addEntry = async (content: string, bulletType: BulletType, scheduledDate?: string) => {
     if (!uid) return
     // 날짜를 선택한 경우 해당 날짜의 year/month로 monthly 항목을 생성한다.
@@ -41,10 +43,6 @@ export function useMonthlyLog(year: number, month: number) {
       scheduledDate ? parseDate(scheduledDate) : { year, month }
     const entry = createMonthlyEntry(content, bulletType, entryYear, entryMonth, scheduledDate)
     await setDoc(doc(firestore, `journals/${journalId}/monthlyLogs/${entry.id}`), entry)
-    if (scheduledDate) {
-      const daily = createDailyEntry(content, bulletType, scheduledDate)
-      await setDoc(doc(firestore, `journals/${journalId}/dailyLogs/${daily.id}`), daily)
-    }
   }
 
   const updateStatus = async (id: string, taskStatus: TaskStatus) => {
