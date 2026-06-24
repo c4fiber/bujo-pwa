@@ -28,8 +28,7 @@ async function dedupeMigrated(journalId: string) {
   let count = 0
   for (const [, docs] of bySource) {
     if (docs.length <= 1) continue
-    // keep the earliest createdAt, delete the rest
-    docs.sort((a, b) => (a.data() as DailyEntry).createdAt.localeCompare((b.data() as DailyEntry).createdAt))
+    docs.sort((a, b) => (a.data() as DailyEntry).id.localeCompare((b.data() as DailyEntry).id))
     for (const d of docs.slice(1)) {
       wb.delete(d.ref)
       count++
@@ -71,8 +70,6 @@ async function runCarryForward(journalId: string, today: string) {
       content: task.content,
       bulletType: 'task',
       taskStatus: 'open',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
       tags: task.tags ?? [],
       date: today,
       year, month, day,
@@ -81,7 +78,7 @@ async function runCarryForward(journalId: string, today: string) {
     }
 
     wb.set(doc(firestore, `journals/${journalId}/dailyLogs/${carriedEntry.id}`), carriedEntry)
-    wb.update(taskDoc.ref, { taskStatus: 'migrated', updatedAt: new Date().toISOString() })
+    wb.update(taskDoc.ref, { taskStatus: 'migrated' })
     count++
   }
 

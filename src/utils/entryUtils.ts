@@ -2,8 +2,6 @@ import { nanoid } from 'nanoid'
 import type { BulletType, DailyEntry, MonthlyEntry, FutureEntry } from '../types/journal'
 import { toDateString, parseDate } from './dateUtils'
 
-const now = () => new Date().toISOString()
-
 export const createDailyEntry = (
   content: string,
   bulletType: BulletType,
@@ -15,8 +13,6 @@ export const createDailyEntry = (
     content,
     bulletType,
     ...(bulletType === 'task' && { taskStatus: 'open' as const }),
-    createdAt: now(),
-    updatedAt: now(),
     tags: [],
     date,
     year,
@@ -37,8 +33,6 @@ export const createMonthlyEntry = (
   content,
   bulletType,
   ...(bulletType === 'task' && { taskStatus: 'open' as const }),
-  createdAt: now(),
-  updatedAt: now(),
   tags: [],
   year,
   month,
@@ -55,8 +49,6 @@ export const createFutureEntry = (
   content,
   bulletType,
   ...(bulletType === 'task' && { taskStatus: 'open' as const }),
-  createdAt: now(),
-  updatedAt: now(),
   tags: [],
   year,
   month,
@@ -73,8 +65,6 @@ export const dailyEntryFromMonthly = (monthly: MonthlyEntry, date: string): Dail
     day,
     origin: 'from-monthly',
     sourceId: monthly.id,
-    createdAt: now(),
-    updatedAt: now(),
   }
 }
 
@@ -89,8 +79,6 @@ export const dailyEntryFromFuture = (future: FutureEntry, date: string): DailyEn
     day,
     origin: 'from-future',
     sourceId: future.id,
-    createdAt: now(),
-    updatedAt: now(),
   }
 }
 
