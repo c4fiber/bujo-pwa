@@ -6,7 +6,7 @@ import { firestore } from '../lib/firebase'
 import { setDoc, updateDoc, deleteDoc } from '../lib/syncedFirestore'
 import { useAuthStore } from '../store/authStore'
 import type { BulletType, MonthlyEntry, TaskStatus } from '../types/journal'
-import { createMonthlyEntry, createFutureEntry, createDailyEntry } from '../utils/entryUtils'
+import { createMonthlyEntry, createFutureEntry } from '../utils/entryUtils'
 import { parseDate } from '../utils/dateUtils'
 
 export function useMonthlyLog(year: number, month: number) {
@@ -25,7 +25,6 @@ export function useMonthlyLog(year: number, month: number) {
         snap.docs
           .map(d => d.data() as MonthlyEntry)
           .sort((a, b) => {
-            // scheduledDate 있는 항목이 먼저, 없으면 id 순(삽입 순서 근사)
             if (a.scheduledDate && b.scheduledDate) return a.scheduledDate.localeCompare(b.scheduledDate)
             if (a.scheduledDate) return -1
             if (b.scheduledDate) return 1
@@ -35,10 +34,10 @@ export function useMonthlyLog(year: number, month: number) {
     })
   }, [uid, journalId, year, month])
 
-  const addEntry = async (content: string, bulletType: BulletType, targetMonth?: number, scheduledDate?: string) => {
+  // Monthly log는 날짜(scheduledDate) 필수
+  const addEntry = async (content: string, bulletType: BulletType, scheduledDate: string) => {
     if (!uid) return
-    const entryMonth = targetMonth ?? month
-    const entryYear = scheduledDate ? parseDate(scheduledDate).year : year
+    const { year: entryYear, month: entryMonth } = parseDate(scheduledDate)
     const entry = createMonthlyEntry(content, bulletType, entryYear, entryMonth, scheduledDate)
     await setDoc(doc(firestore, `journals/${journalId}/monthlyLogs/${entry.id}`), entry)
   }
@@ -72,12 +71,5 @@ export function useMonthlyLog(year: number, month: number) {
     await updateDoc(doc(firestore, `journals/${journalId}/monthlyLogs/${id}`), { taskStatus: 'scheduled' })
   }
 
-  const migrateToDaily = async (id: string, content: string, bulletType: BulletType, targetDate: string) => {
-    if (!uid) return
-    const daily = createDailyEntry(content, bulletType, targetDate)
-    await setDoc(doc(firestore, `journals/${journalId}/dailyLogs/${daily.id}`), daily)
-    await updateDoc(doc(firestore, `journals/${journalId}/monthlyLogs/${id}`), { taskStatus: 'migrated' })
-  }
-
-  return { entries, addEntry, updateStatus, updateContent, setScheduledDate, deleteEntry, scheduleToFuture, migrateToDaily }
+  return { entries, addEntry, updateStatus, updateContent, setScheduledDate, deleteEntry, scheduleToFuture }
 }
