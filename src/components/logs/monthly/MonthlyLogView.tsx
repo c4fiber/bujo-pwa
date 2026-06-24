@@ -6,15 +6,20 @@ import { useMonthlyLog } from '../../../hooks/useMonthlyLog'
 import { EntryItem } from '../../entry/EntryItem'
 import { EntryComposer } from '../../entry/EntryComposer'
 import { format, parseISO } from 'date-fns'
-import { formatMonthDisplay, nextMonth, prevMonth } from '../../../utils/dateUtils'
+import { formatMonthDisplay, nextMonth, prevMonth, MONTHS_KO } from '../../../utils/dateUtils'
 import type { BulletType, EntryOrigin } from '../../../types/journal'
+
+function daysInMonth(year: number, month: number) {
+  return new Date(year, month, 0).getDate()
+}
 
 export function MonthlyLogView() {
   const { activeYear, activeMonth, setActiveYear, setActiveMonth, setActiveDate } = useUIStore()
   const navigate = useNavigate()
   const { entries, addEntry, updateStatus, updateContent, setScheduledDate, deleteEntry, scheduleToFuture, migrateToDaily } = useMonthlyLog(activeYear, activeMonth)
   const today = format(new Date(), 'yyyy-MM-dd')
-  const [composerDate, setComposerDate] = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [composerMonth, setComposerMonth] = useState(activeMonth)
+  const [composerDay, setComposerDay] = useState<number | ''>('')
 
   const goNext = () => {
     const { year, month } = nextMonth(activeYear, activeMonth)
@@ -26,8 +31,11 @@ export function MonthlyLogView() {
   }
 
   const handleAdd = (content: string, bulletType: BulletType) => {
-    addEntry(content, bulletType, composerDate || undefined)
-    setComposerDate('')
+    const scheduledDate = composerDay !== ''
+      ? `${activeYear}-${String(composerMonth).padStart(2, '0')}-${String(composerDay).padStart(2, '0')}`
+      : undefined
+    addEntry(content, bulletType, composerMonth, scheduledDate)
+    setComposerDay('')
   }
 
   return (
@@ -43,13 +51,13 @@ export function MonthlyLogView() {
       <div className="flex-1 overflow-y-auto p-3 space-y-1">
         <AnimatePresence initial={false}>
           {entries.map(entry => {
-            const d = parseISO(entry.scheduledDate ?? entry.createdAt)
-            const dayNum = format(d, 'd')
-            const dayOfWeek = format(d, 'EEE')
+            const scheduled = entry.scheduledDate ? parseISO(entry.scheduledDate) : null
+            const dayNum = scheduled ? format(scheduled, 'd') : null
+            const dayOfWeek = scheduled ? format(scheduled, 'EEE') : null
             return (
               <div key={entry.id} className="group/row flex items-start gap-2">
                 {/* 날짜 컬럼 — scheduledDate 있으면 탭으로 Daily 이동 */}
-                {entry.scheduledDate ? (
+                {dayNum ? (
                   <button
                     className="w-9 shrink-0 pt-2 text-right active:opacity-60 transition-opacity"
                     onClick={() => { setActiveDate(entry.scheduledDate!); navigate('/daily') }}
@@ -60,8 +68,7 @@ export function MonthlyLogView() {
                   </button>
                 ) : (
                   <div className="w-9 shrink-0 pt-2 text-right">
-                    <div className="text-xs font-mono text-zinc-400 leading-none">{dayNum}</div>
-                    <div className="text-[10px] font-mono text-zinc-600 leading-none mt-0.5">{dayOfWeek}</div>
+                    <div className="text-xs font-mono text-zinc-600 leading-none">—</div>
                   </div>
                 )}
                 {/* 항목 + 날짜 지정 */}
@@ -106,13 +113,26 @@ export function MonthlyLogView() {
         placeholder="월간 항목 입력…"
         extraFields={
           <div className="flex items-center gap-2 text-xs text-zinc-600">
-            <span>날짜 지정:</span>
-            <input
-              type="date"
+            <select
               className="bg-transparent text-zinc-400 outline-none font-mono text-xs"
-              value={composerDate}
-              onChange={e => setComposerDate(e.target.value)}
-            />
+              value={composerMonth}
+              onChange={e => { setComposerMonth(Number(e.target.value)); setComposerDay('') }}
+            >
+              {MONTHS_KO.map((label, idx) => (
+                <option key={idx + 1} value={idx + 1} className="bg-surface-1">{label}</option>
+              ))}
+            </select>
+            <span className="text-zinc-700">·</span>
+            <select
+              className="bg-transparent text-zinc-400 outline-none font-mono text-xs"
+              value={composerDay}
+              onChange={e => setComposerDay(e.target.value === '' ? '' : Number(e.target.value))}
+            >
+              <option value="" className="bg-surface-1">일 선택 안함</option>
+              {Array.from({ length: daysInMonth(activeYear, composerMonth) }, (_, i) => i + 1).map(d => (
+                <option key={d} value={d} className="bg-surface-1">{d}일</option>
+              ))}
+            </select>
           </div>
         }
       />
