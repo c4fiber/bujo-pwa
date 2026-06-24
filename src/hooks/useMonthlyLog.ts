@@ -33,14 +33,12 @@ export function useMonthlyLog(year: number, month: number) {
     })
   }, [uid, journalId, year, month])
 
-  // 선택한 날짜를 월간 항목의 단일 날짜(scheduledDate)로 저장.
-  // 별도의 Daily 항목을 중복 생성하지 않는다.
-  const addEntry = async (content: string, bulletType: BulletType, scheduledDate?: string) => {
+  // targetMonth: 뷰의 month 대신 선택한 월 사용 (필수)
+  // scheduledDate: 일까지 선택했을 때만 전달 (선택)
+  const addEntry = async (content: string, bulletType: BulletType, targetMonth?: number, scheduledDate?: string) => {
     if (!uid) return
-    // 날짜를 선택한 경우 해당 날짜의 year/month로 monthly 항목을 생성한다.
-    // 선택하지 않으면 현재 뷰의 year/month 사용.
-    const { year: entryYear, month: entryMonth } =
-      scheduledDate ? parseDate(scheduledDate) : { year, month }
+    const entryMonth = targetMonth ?? month
+    const entryYear = scheduledDate ? parseDate(scheduledDate).year : year
     const entry = createMonthlyEntry(content, bulletType, entryYear, entryMonth, scheduledDate)
     await setDoc(doc(firestore, `journals/${journalId}/monthlyLogs/${entry.id}`), entry)
   }
