@@ -7,8 +7,6 @@ export interface BaseEntry {
   content: string;
   bulletType: BulletType;
   taskStatus?: TaskStatus;
-  createdAt: string;
-  updatedAt: string;
   tags: string[];
   gcalEventId?: string;  // Google Calendar 연동용 (event 전용)
 }

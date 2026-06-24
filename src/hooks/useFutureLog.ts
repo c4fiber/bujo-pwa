@@ -22,7 +22,7 @@ export function useFutureLog(year: number) {
       setEntries(
         snap.docs
           .map(d => d.data() as FutureEntry)
-          .sort((a, b) => a.month - b.month || a.createdAt.localeCompare(b.createdAt))
+          .sort((a, b) => a.month - b.month || a.id.localeCompare(b.id))
       )
     })
   }, [uid, journalId, year])
@@ -35,16 +35,12 @@ export function useFutureLog(year: number) {
 
   const updateStatus = async (id: string, taskStatus: TaskStatus) => {
     if (!uid) return
-    await updateDoc(doc(firestore, `journals/${journalId}/futureLogs/${id}`), {
-      taskStatus, updatedAt: new Date().toISOString(),
-    })
+    await updateDoc(doc(firestore, `journals/${journalId}/futureLogs/${id}`), { taskStatus })
   }
 
   const updateContent = async (id: string, content: string) => {
     if (!uid) return
-    await updateDoc(doc(firestore, `journals/${journalId}/futureLogs/${id}`), {
-      content, updatedAt: new Date().toISOString(),
-    })
+    await updateDoc(doc(firestore, `journals/${journalId}/futureLogs/${id}`), { content })
   }
 
   const deleteEntry = async (id: string) => {
@@ -52,7 +48,6 @@ export function useFutureLog(year: number) {
     await deleteDoc(doc(firestore, `journals/${journalId}/futureLogs/${id}`))
   }
 
-  // > (Schedule to Monthly): Future → Monthly (월 선택, 선택적으로 일 지정)
   const scheduleToMonthly = async (id: string, content: string, bulletType: BulletType, targetYear: number, targetMonth: number, targetDay?: number) => {
     if (!uid) return
     const scheduledDate = targetDay
@@ -64,10 +59,7 @@ export function useFutureLog(year: number) {
       const daily = createDailyEntry(content, bulletType, scheduledDate)
       await setDoc(doc(firestore, `journals/${journalId}/dailyLogs/${daily.id}`), daily)
     }
-    await updateDoc(doc(firestore, `journals/${journalId}/futureLogs/${id}`), {
-      taskStatus: 'scheduled',
-      updatedAt: new Date().toISOString(),
-    })
+    await updateDoc(doc(firestore, `journals/${journalId}/futureLogs/${id}`), { taskStatus: 'scheduled' })
   }
 
   return { entries, addEntry, updateStatus, updateContent, deleteEntry, scheduleToMonthly }

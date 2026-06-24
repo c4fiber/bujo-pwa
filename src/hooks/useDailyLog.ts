@@ -20,11 +20,7 @@ export function useDailyLog(date: string) {
       where('date', '==', date),
     )
     return onSnapshot(q, snap => {
-      setEntries(
-        snap.docs
-          .map(d => d.data() as DailyEntry)
-          .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
-      )
+      setEntries(snap.docs.map(d => d.data() as DailyEntry))
     })
   }, [uid, journalId, date])
 
@@ -36,16 +32,12 @@ export function useDailyLog(date: string) {
 
   const updateStatus = async (id: string, taskStatus: TaskStatus) => {
     if (!uid) return
-    await updateDoc(doc(firestore, `journals/${journalId}/dailyLogs/${id}`), {
-      taskStatus, updatedAt: new Date().toISOString(),
-    })
+    await updateDoc(doc(firestore, `journals/${journalId}/dailyLogs/${id}`), { taskStatus })
   }
 
   const updateContent = async (id: string, content: string) => {
     if (!uid) return
-    await updateDoc(doc(firestore, `journals/${journalId}/dailyLogs/${id}`), {
-      content, updatedAt: new Date().toISOString(),
-    })
+    await updateDoc(doc(firestore, `journals/${journalId}/dailyLogs/${id}`), { content })
   }
 
   const deleteEntry = async (id: string) => {
@@ -53,17 +45,12 @@ export function useDailyLog(date: string) {
     await deleteDoc(doc(firestore, `journals/${journalId}/dailyLogs/${id}`))
   }
 
-  // < (Scheduled): Daily task → Monthly Log (한 단계 왼쪽)
-  // 대상 날짜를 선택하면 그 날짜의 monthly 항목으로 이동.
   const scheduleToMonthly = async (id: string, content: string, bulletType: BulletType, targetDate: string) => {
     if (!uid) return
     const { year, month } = parseDate(targetDate)
     const monthly = createMonthlyEntry(content, bulletType, year, month, targetDate)
     await setDoc(doc(firestore, `journals/${journalId}/monthlyLogs/${monthly.id}`), monthly)
-    await updateDoc(doc(firestore, `journals/${journalId}/dailyLogs/${id}`), {
-      taskStatus: 'scheduled',
-      updatedAt: new Date().toISOString(),
-    })
+    await updateDoc(doc(firestore, `journals/${journalId}/dailyLogs/${id}`), { taskStatus: 'scheduled' })
   }
 
   return { entries, addEntry, updateStatus, updateContent, deleteEntry, scheduleToMonthly }

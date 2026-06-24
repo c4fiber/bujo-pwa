@@ -31,7 +31,7 @@ export function ReviewView() {
 
   const updateStatus = async (id: string, taskStatus: TaskStatus) => {
     await updateDoc(doc(firestore, `journals/${journalId}/dailyLogs/${id}`), {
-      taskStatus, updatedAt: new Date().toISOString(),
+      taskStatus,
     })
   }
 
