@@ -7,9 +7,17 @@ interface Props {
   open: boolean
   onConfirm: (year: number, month: number) => void
   onClose: () => void
+  title?: string
+  description?: string
+  confirmLabel?: string
 }
 
-export function ScheduleToFutureDialog({ open, onConfirm, onClose }: Props) {
+export function ScheduleToFutureDialog({
+  open, onConfirm, onClose,
+  title = 'SCHEDULE TO FUTURE',
+  description = 'Future Log 월을 선택하세요',
+  confirmLabel = '< Future로 이동',
+}: Props) {
   const now = new Date()
   const defaultMonth = now.getMonth() + 2 > 12 ? 1 : now.getMonth() + 2
   const defaultYear = now.getMonth() + 2 > 12 ? now.getFullYear() + 1 : now.getFullYear()
@@ -43,8 +51,8 @@ export function ScheduleToFutureDialog({ open, onConfirm, onClose }: Props) {
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
           >
             <div className="w-8 h-1 bg-surface-3 rounded-full mx-auto mb-5" />
-            <p className="text-xs font-mono text-zinc-500 mb-1">SCHEDULE TO FUTURE</p>
-            <p className="text-sm text-zinc-300 mb-4">Future Log 월을 선택하세요</p>
+            <p className="text-xs font-mono text-zinc-500 mb-1">{title}</p>
+            <p className="text-sm text-zinc-300 mb-4">{description}</p>
 
             <div className="flex gap-3 mb-4">
               <select
@@ -72,7 +80,7 @@ export function ScheduleToFutureDialog({ open, onConfirm, onClose }: Props) {
                 onClick={handleConfirm}
                 className="flex-1 py-2.5 rounded-xl bg-accent-amber/20 text-accent-amber border border-accent-amber/30 text-sm font-mono hover:bg-accent-amber/30 transition-colors"
               >
-                &lt; Future로 이동
+                {confirmLabel}
               </button>
               <button
                 onClick={onClose}

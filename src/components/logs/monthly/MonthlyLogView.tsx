@@ -12,7 +12,8 @@ import type { BulletType, EntryOrigin } from '../../../types/journal'
 export function MonthlyLogView() {
   const { activeYear, activeMonth, setActiveYear, setActiveMonth, setActiveDate } = useUIStore()
   const navigate = useNavigate()
-  const { entries, addEntry, updateStatus, updateContent, setScheduledDate, deleteEntry, scheduleToFuture, migrateToNextMonth } = useMonthlyLog(activeYear, activeMonth)
+  const { entries, addEntry, updateStatus, updateContent, setScheduledDate, deleteEntry, scheduleToFuture, migrateToDaily } = useMonthlyLog(activeYear, activeMonth)
+  const today = format(new Date(), 'yyyy-MM-dd')
   const [composerDate, setComposerDate] = useState(format(new Date(), 'yyyy-MM-dd'))
 
   const goNext = () => {
@@ -71,7 +72,7 @@ export function MonthlyLogView() {
                     onStatusChange={updateStatus}
                     onContentChange={entry.sourceId ? undefined : updateContent}
                     onDelete={entry.sourceId ? undefined : deleteEntry}
-                    onMigrateNext={entry.sourceId ? undefined : (id, content, bulletType) => migrateToNextMonth(id, content, bulletType)}
+                    onMigrateToDaily={entry.sourceId ? undefined : (id, content, bulletType) => migrateToDaily(id, content, bulletType, today)}
                     onScheduleToFuture={entry.sourceId ? undefined : scheduleToFuture}
                   />
                   <div className="pl-8 pb-1 opacity-0 group-hover/row:opacity-100 transition-opacity">
@@ -80,7 +81,7 @@ export function MonthlyLogView() {
                       className="text-[10px] font-mono bg-transparent text-zinc-500 border-none outline-none"
                       value={entry.scheduledDate ?? ''}
                       onChange={e => setScheduledDate(entry.id, e.target.value || undefined)}
-                      title="예정일 변경 (메모용)"
+                      title="날짜 변경"
                     />
                   </div>
                 </div>

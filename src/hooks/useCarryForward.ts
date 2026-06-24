@@ -1,9 +1,10 @@
 import { useEffect } from 'react'
 import {
-  collection, doc, getDocs, query, writeBatch, where,
+  collection, doc, getDocs, query, where,
 } from 'firebase/firestore'
 import { nanoid } from 'nanoid'
 import { firestore } from '../lib/firebase'
+import { writeBatch } from '../lib/syncedFirestore'
 import { useAuthStore } from '../store/authStore'
 import { toDateString, parseDate, prevDay } from '../utils/dateUtils'
 import type { DailyEntry } from '../types/journal'
