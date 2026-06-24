@@ -212,6 +212,9 @@ export function EntryItem({
           open={scheduleToMonthlyFromFutureOpen}
           onConfirm={(y, m) => onScheduleToMonthlyFromFuture(entry.id, entry.content, entry.bulletType, y, m)}
           onClose={() => setScheduleToMonthlyFromFutureOpen(false)}
+          title="SCHEDULE TO MONTHLY"
+          description="Monthly Log 월을 선택하세요"
+          confirmLabel="> Monthly로 이동"
         />
       )}
     </motion.div>
