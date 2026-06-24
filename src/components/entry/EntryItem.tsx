@@ -5,6 +5,7 @@ import { BulletIcon } from './BulletIcon'
 import { OriginBadge } from './OriginBadge'
 import { DelayDialog } from './DelayDialog'
 import { ScheduleToFutureDialog } from './ScheduleToFutureDialog'
+import { ScheduleToMonthlyDialog } from './ScheduleToMonthlyDialog'
 
 type AnyEntry = DailyEntry | MonthlyEntry | FutureEntry
 
@@ -20,8 +21,8 @@ interface Props {
   onScheduleToFuture?: (id: string, content: string, bulletType: BulletType, targetYear: number, targetMonth: number) => void
   // > : Monthly → Daily (월+일 선택)
   onMigrateToDaily?: (id: string, content: string, bulletType: BulletType, targetDate: string) => void
-  // > : Future → Monthly (연+월 선택, 일 없음)
-  onScheduleToMonthlyFromFuture?: (id: string, content: string, bulletType: BulletType, targetYear: number, targetMonth: number) => void
+  // > : Future → Monthly (연+월 선택, 선택적으로 일 지정)
+  onScheduleToMonthlyFromFuture?: (id: string, content: string, bulletType: BulletType, targetYear: number, targetMonth: number, targetDay?: number) => void
   readOnly?: boolean
 }
 
@@ -206,15 +207,12 @@ export function EntryItem({
           onClose={() => setMigrateToDailyOpen(false)}
         />
       )}
-      {/* Future → Monthly (연+월 선택) */}
+      {/* Future → Monthly (연+월+선택적 일 선택) */}
       {canScheduleToMonthlyFromFuture && (
-        <ScheduleToFutureDialog
+        <ScheduleToMonthlyDialog
           open={scheduleToMonthlyFromFutureOpen}
-          onConfirm={(y, m) => onScheduleToMonthlyFromFuture(entry.id, entry.content, entry.bulletType, y, m)}
+          onConfirm={(y, m, d) => onScheduleToMonthlyFromFuture(entry.id, entry.content, entry.bulletType, y, m, d)}
           onClose={() => setScheduleToMonthlyFromFutureOpen(false)}
-          title="SCHEDULE TO MONTHLY"
-          description="Monthly Log 월을 선택하세요"
-          confirmLabel="> Monthly로 이동"
         />
       )}
     </motion.div>

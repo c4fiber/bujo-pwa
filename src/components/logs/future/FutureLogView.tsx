@@ -73,7 +73,7 @@ export function FutureLogView() {
                             onStatusChange={updateStatus}
                             onContentChange={updateContent}
                             onDelete={deleteEntry}
-                            onScheduleToMonthlyFromFuture={(id, content, bulletType, y, m) => scheduleToMonthly(id, content, bulletType, y, m)}
+                            onScheduleToMonthlyFromFuture={(id, content, bulletType, y, m, d) => scheduleToMonthly(id, content, bulletType, y, m, d)}
                           />
                         ))}
                       </AnimatePresence>
