@@ -60,13 +60,12 @@ Future Log  ←  Monthly Log  ←  Daily Log
 ### 항목 이동
 | 동작 | 방향 | 설명 |
 |------|------|------|
-| `<` | Daily → Monthly | 오늘 못 하고 이번 달 다른 날로 미룰 때 |
+| `<` | Daily → Monthly | 오늘 못 하고 이번 달 다른 날로 미룰 때 (수동) |
 | `>` | 해당 없음 | Daily보다 오른쪽 개념 없음 |
 
-### 자동 이월 (Carry Forward)
-- **매일 첫 접속 시** 어제의 미완료(`open`) task를 오늘 Daily로 자동 이월.
-- `origin: migrated`로 복사, 원본은 `taskStatus: migrated`로 표시.
-- `delayedMonthlyId`가 있는 항목(Monthly로 예약된 것)은 이월 제외.
+### 자동 이월 없음
+- 어제의 미완료 task를 오늘로 **자동 이월하지 않는다.**
+- BuJo의 의도는 마감 압박이 아니라 의식적인 재배치이므로, 못 끝낸 일은 사용자가 `<`로 Monthly에 직접 미루거나 다음 날 Daily에 다시 적는다.
 
 ---
 
@@ -80,8 +79,8 @@ Future Log  ←  Monthly Log  ←  Daily Log
    [Monthly Log] (월.일 필수)
         ↓  자동 (당일 첫 접속)
    [Daily Log]   (오늘 처리)
-        ↓  자동 (다음날 첫 접속)
-   [Daily Log]   (미완료 이월)
+
+  ※ 미완료 task는 자동 이월되지 않음 — 필요 시 < 로 수동 재배치
 ```
 
 ---
