@@ -113,6 +113,7 @@ export function ReviewView() {
                         entry={entry}
                         origin={entry.origin}
                         onStatusChange={updateStatus}
+                        disableMotion
                       />
                     ))}
                   </div>

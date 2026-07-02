@@ -24,6 +24,9 @@ interface Props {
   // > : Future → Monthly (연+월 선택, 선택적으로 일 지정)
   onScheduleToMonthlyFromFuture?: (id: string, content: string, bulletType: BulletType, targetYear: number, targetMonth: number, targetDay?: number) => void
   readOnly?: boolean
+  // 대량 목록(Review 등)에서 framer-motion layout projection으로 인한
+  // 초기 렌더 미표시 이슈를 피하기 위해 애니메이션을 끈다.
+  disableMotion?: boolean
 }
 
 const MIGRATED_CYCLE: TaskStatus[] = ['open', 'completed', 'cancelled']
@@ -47,7 +50,7 @@ export function EntryItem({
   entry, origin = 'manual',
   onStatusChange, onContentChange, onDelete,
   onScheduleToMonthly, onScheduleToFuture, onMigrateToDaily, onScheduleToMonthlyFromFuture,
-  readOnly,
+  readOnly, disableMotion,
 }: Props) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(entry.content)
@@ -86,13 +89,19 @@ export function EntryItem({
 
   const hasStrikethrough = entry.taskStatus === 'completed' || entry.taskStatus === 'cancelled'
 
+  const motionProps = disableMotion
+    ? {}
+    : {
+        layout: true,
+        initial: { opacity: 0, y: 8 },
+        animate: { opacity: 1, y: 0 },
+        exit: { opacity: 0, x: -20 },
+        transition: { duration: 0.15 },
+      }
+
   return (
     <motion.div
-      layout
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      transition={{ duration: 0.15 }}
+      {...motionProps}
       className={`flex items-start gap-2 px-3 py-2 border-l-2 ${
         entry.bulletType === 'event' ? 'border-l-accent-blue bg-blue-950/10' : `${borderColor[origin]} ${bgColor[origin]}`
       } rounded-r group`}
