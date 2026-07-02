@@ -12,6 +12,9 @@ export function SettingsView() {
   const [loading, setLoading] = useState(false)
   const [, forceUpdate] = useState(0)
 
+  // 실시간 코드 반영 확인용 — 진입할 때마다 랜덤으로 하나 선택
+  const [devTip] = useState(() => DEV_TIPS[Math.floor(Math.random() * DEV_TIPS.length)])
+
   // 쿨다운 카운트다운 갱신
   useEffect(() => {
     const id = setInterval(() => forceUpdate(n => n + 1), 10_000)
@@ -171,9 +174,30 @@ export function SettingsView() {
           </p>
         )}
       </motion.div>
+
+      {/* 실시간 코드 반영 확인용 랜덤 팁 */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="bg-surface-1 rounded-xl p-4 flex flex-col gap-2 border border-surface-2"
+      >
+        <span className="text-xs font-mono text-zinc-500 tracking-widest uppercase">Tip</span>
+        <p className="text-sm text-zinc-300 leading-relaxed">{devTip}</p>
+      </motion.div>
     </div>
   )
 }
+
+const DEV_TIPS = [
+  '작은 일도 Daily Log에 적어두면 하루의 흐름이 또렷해집니다.',
+  '못 끝낸 일은 죄책감 없이 다음 날로 옮겨 적어보세요.',
+  '이번 달 목표는 Monthly Log에, 막연한 계획은 Future Log에.',
+  '완료한 항목에 X 표시를 하는 순간의 성취감을 즐기세요.',
+  '매일 아침 오늘의 Daily Log를 훑어보는 습관을 들여보세요.',
+  '너무 많이 계획하지 마세요. 하루 3가지면 충분합니다.',
+  'Review 탭에서 한 해의 발자취를 되돌아보세요.',
+]
 
 function formatRelative(epochMs: number): string {
   const diff = Date.now() - epochMs
