@@ -6,7 +6,8 @@ import { firestore } from '../lib/firebase'
 import { setDoc, updateDoc, deleteDoc } from '../lib/syncedFirestore'
 import { useAuthStore } from '../store/authStore'
 import type { BulletType, FutureEntry, TaskStatus } from '../types/journal'
-import { createFutureEntry, createMonthlyEntry, dailyEntryFromMonthly } from '../utils/entryUtils'
+import { createFutureEntry } from '../utils/entryUtils'
+import { createMonthlyLog } from '../lib/monthlyLog'
 
 export function useFutureLog(year: number) {
   const { uid, journalId } = useAuthStore()
@@ -48,17 +49,14 @@ export function useFutureLog(year: number) {
     await deleteDoc(doc(firestore, `journals/${journalId}/futureLogs/${id}`))
   }
 
+  // > (Schedule to Monthly): Future → Monthly Log 생성만 트리거한다.
+  // Daily Log 생성/표현은 Monthly Log 로직(createMonthlyLog)이 단독으로 처리.
   const scheduleToMonthly = async (id: string, content: string, bulletType: BulletType, targetYear: number, targetMonth: number, targetDay?: number) => {
     if (!uid) return
     const scheduledDate = targetDay
       ? `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(targetDay).padStart(2, '0')}`
       : undefined
-    const monthly = createMonthlyEntry(content, bulletType, targetYear, targetMonth, scheduledDate)
-    await setDoc(doc(firestore, `journals/${journalId}/monthlyLogs/${monthly.id}`), monthly)
-    if (scheduledDate) {
-      const daily = dailyEntryFromMonthly(monthly, scheduledDate)
-      await setDoc(doc(firestore, `journals/${journalId}/dailyLogs/${daily.id}`), daily)
-    }
+    await createMonthlyLog(journalId, { content, bulletType, year: targetYear, month: targetMonth, scheduledDate })
     await updateDoc(doc(firestore, `journals/${journalId}/futureLogs/${id}`), { taskStatus: 'scheduled' })
   }
 
