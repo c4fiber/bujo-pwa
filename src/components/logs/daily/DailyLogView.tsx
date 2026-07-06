@@ -3,10 +3,13 @@ import { useUIStore } from '../../../store/uiStore'
 import { useDailyLog } from '../../../hooks/useDailyLog'
 import { EntryItem } from '../../entry/EntryItem'
 import { EntryComposer } from '../../entry/EntryComposer'
-import { formatDisplay, nextDay, prevDay } from '../../../utils/dateUtils'
+import { OverdueSection } from './OverdueSection'
+import { formatDisplay, nextDay, prevDay, toDateString } from '../../../utils/dateUtils'
 export function DailyLogView() {
   const { activeDate, setActiveDate } = useUIStore()
   const { entries, addEntry, updateStatus, updateContent, deleteEntry, scheduleToMonthly } = useDailyLog(activeDate)
+  const today = toDateString(new Date())
+  const isToday = activeDate === today
 
   const manualEntries   = entries.filter(e => e.origin === 'manual')
   const migratedEntries = entries.filter(e => e.origin === 'migrated')
@@ -22,6 +25,9 @@ export function DailyLogView() {
 
       {/* 엔트리 목록 */}
       <div className="flex-1 overflow-y-auto p-3 space-y-1">
+
+        {/* 밀린 항목 (오늘 볼 때만) */}
+        {isToday && <OverdueSection today={today} />}
 
         {/* 직접 작성한 항목 */}
         <AnimatePresence initial={false}>
