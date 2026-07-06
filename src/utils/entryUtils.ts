@@ -57,8 +57,11 @@ export const createFutureEntry = (
 export const dailyEntryFromMonthly = (monthly: MonthlyEntry, date: string): DailyEntry => {
   const { year, month, day } = parseDate(date)
   return {
-    ...monthly,
     id: nanoid(),
+    content: monthly.content,
+    bulletType: monthly.bulletType,
+    ...(monthly.bulletType === 'task' && { taskStatus: 'open' as const }),
+    tags: monthly.tags ?? [],
     date,
     year,
     month,

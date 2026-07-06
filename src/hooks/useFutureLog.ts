@@ -6,7 +6,7 @@ import { firestore } from '../lib/firebase'
 import { setDoc, updateDoc, deleteDoc } from '../lib/syncedFirestore'
 import { useAuthStore } from '../store/authStore'
 import type { BulletType, FutureEntry, TaskStatus } from '../types/journal'
-import { createFutureEntry, createMonthlyEntry, createDailyEntry } from '../utils/entryUtils'
+import { createFutureEntry, createMonthlyEntry, dailyEntryFromMonthly } from '../utils/entryUtils'
 
 export function useFutureLog(year: number) {
   const { uid, journalId } = useAuthStore()
@@ -56,7 +56,7 @@ export function useFutureLog(year: number) {
     const monthly = createMonthlyEntry(content, bulletType, targetYear, targetMonth, scheduledDate)
     await setDoc(doc(firestore, `journals/${journalId}/monthlyLogs/${monthly.id}`), monthly)
     if (scheduledDate) {
-      const daily = createDailyEntry(content, bulletType, scheduledDate)
+      const daily = dailyEntryFromMonthly(monthly, scheduledDate)
       await setDoc(doc(firestore, `journals/${journalId}/dailyLogs/${daily.id}`), daily)
     }
     await updateDoc(doc(firestore, `journals/${journalId}/futureLogs/${id}`), { taskStatus: 'scheduled' })

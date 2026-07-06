@@ -6,7 +6,7 @@ import { firestore } from '../lib/firebase'
 import { setDoc, updateDoc, deleteDoc } from '../lib/syncedFirestore'
 import { useAuthStore } from '../store/authStore'
 import type { BulletType, MonthlyEntry, TaskStatus } from '../types/journal'
-import { createMonthlyEntry, createFutureEntry } from '../utils/entryUtils'
+import { createMonthlyEntry, createFutureEntry, dailyEntryFromMonthly } from '../utils/entryUtils'
 import { parseDate } from '../utils/dateUtils'
 
 export function useMonthlyLog(year: number, month: number) {
@@ -34,12 +34,15 @@ export function useMonthlyLog(year: number, month: number) {
     })
   }, [uid, journalId, year, month])
 
-  // Monthly log는 날짜(scheduledDate) 필수
+  // Monthly log는 날짜(scheduledDate) 필수.
+  // 생성 즉시 해당 날짜의 Daily Log에도 항목을 만들어 준다(from-monthly).
   const addEntry = async (content: string, bulletType: BulletType, scheduledDate: string) => {
     if (!uid) return
     const { year: entryYear, month: entryMonth } = parseDate(scheduledDate)
     const entry = createMonthlyEntry(content, bulletType, entryYear, entryMonth, scheduledDate)
     await setDoc(doc(firestore, `journals/${journalId}/monthlyLogs/${entry.id}`), entry)
+    const daily = dailyEntryFromMonthly(entry, scheduledDate)
+    await setDoc(doc(firestore, `journals/${journalId}/dailyLogs/${daily.id}`), daily)
   }
 
   const updateStatus = async (id: string, taskStatus: TaskStatus) => {
