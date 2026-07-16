@@ -20,7 +20,7 @@ export function EntryComposer({ onAdd, placeholder = '내용 입력…', extraFi
 
   const submit = () => {
     const trimmed = content.trim()
-    if (!trimmed || composingRef.current) return
+    if (!trimmed) return
     onAdd(trimmed, bulletType)
     setContent('')
   }
@@ -59,14 +59,7 @@ export function EntryComposer({ onAdd, placeholder = '내용 입력…', extraFi
           }}
         />
         <button
-          onMouseDown={e => {
-            e.preventDefault()
-            submit()
-          }}
-          onTouchEnd={e => {
-            e.preventDefault()
-            submit()
-          }}
+          onClick={submit}
           disabled={!content.trim()}
           className="text-xs text-zinc-500 hover:text-white disabled:opacity-30 transition-colors px-1"
         >
