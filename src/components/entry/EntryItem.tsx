@@ -144,7 +144,7 @@ export function EntryItem({
         {/* > : Monthly → Daily (월+일 선택) */}
         {canMigrateToDaily && (
           <button
-            className="opacity-40 hover:opacity-100 active:opacity-100 transition-opacity text-zinc-600 hover:text-accent-amber text-xs px-1 font-mono"
+            className="text-accent-amber/80 hover:text-accent-amber hover:bg-accent-amber/15 active:bg-accent-amber/25 transition-colors text-sm px-1.5 py-0.5 rounded font-mono font-bold"
             onClick={() => setMigrateToDailyOpen(true)}
             title="Daily로 이동 >"
           >
@@ -154,7 +154,7 @@ export function EntryItem({
         {/* > : Future → Monthly (연+월 선택) */}
         {canScheduleToMonthlyFromFuture && (
           <button
-            className="opacity-40 hover:opacity-100 active:opacity-100 transition-opacity text-zinc-600 hover:text-accent-blue text-xs px-1 font-mono"
+            className="text-accent-blue/80 hover:text-accent-blue hover:bg-accent-blue/15 active:bg-accent-blue/25 transition-colors text-sm px-1.5 py-0.5 rounded font-mono font-bold"
             onClick={() => setScheduleToMonthlyFromFutureOpen(true)}
             title="Monthly로 이동 >"
           >
@@ -164,7 +164,7 @@ export function EntryItem({
         {/* < : Daily → Monthly (월+일 선택) */}
         {canScheduleToMonthly && (
           <button
-            className="opacity-40 hover:opacity-100 active:opacity-100 transition-opacity text-zinc-600 hover:text-accent-blue text-xs px-1 font-mono"
+            className="text-accent-blue/80 hover:text-accent-blue hover:bg-accent-blue/15 active:bg-accent-blue/25 transition-colors text-sm px-1.5 py-0.5 rounded font-mono font-bold"
             onClick={() => setScheduleToMonthlyOpen(true)}
             title="Monthly로 예정 <"
           >
@@ -174,7 +174,7 @@ export function EntryItem({
         {/* < : Monthly → Future (연+월 선택) */}
         {canScheduleToFuture && (
           <button
-            className="opacity-40 hover:opacity-100 active:opacity-100 transition-opacity text-zinc-600 hover:text-accent-green text-xs px-1 font-mono"
+            className="text-accent-green/80 hover:text-accent-green hover:bg-accent-green/15 active:bg-accent-green/25 transition-colors text-sm px-1.5 py-0.5 rounded font-mono font-bold"
             onClick={() => setScheduleToFutureOpen(true)}
             title="Future로 예약 <"
           >
@@ -183,7 +183,7 @@ export function EntryItem({
         )}
         {onDelete && (
           <button
-            className="opacity-40 hover:opacity-100 active:opacity-100 transition-opacity text-zinc-600 hover:text-red-400 text-xs px-1"
+            className="text-zinc-500 hover:text-red-400 hover:bg-red-400/15 active:bg-red-400/25 transition-colors text-sm px-1.5 py-0.5 rounded"
             onClick={() => onDelete(entry.id)}
             aria-label="delete"
           >
