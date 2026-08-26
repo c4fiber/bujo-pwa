@@ -9,7 +9,7 @@ import type { BulletType } from '../../../types/journal'
 
 export function FutureLogView() {
   const { activeYear, setActiveYear } = useUIStore()
-  const { entries, addEntry, updateStatus, updateContent, deleteEntry, scheduleToMonthly } = useFutureLog(activeYear)
+  const { entries, addEntry, updateStatus, updateContent, deleteEntry, scheduleToDaily } = useFutureLog(activeYear)
   const [openMonths, setOpenMonths] = useState<number[]>([new Date().getMonth() + 1])
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1)
 
@@ -73,7 +73,7 @@ export function FutureLogView() {
                             onStatusChange={updateStatus}
                             onContentChange={updateContent}
                             onDelete={deleteEntry}
-                            onScheduleToMonthlyFromFuture={(id, content, bulletType, y, m, d) => scheduleToMonthly(id, content, bulletType, y, m, d)}
+                            onScheduleToDaily={scheduleToDaily}
                           />
                         ))}
                       </AnimatePresence>

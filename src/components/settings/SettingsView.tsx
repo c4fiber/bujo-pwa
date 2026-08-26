@@ -192,7 +192,8 @@ export function SettingsView() {
 const DEV_TIPS = [
   '작은 일도 Daily Log에 적어두면 하루의 흐름이 또렷해집니다.',
   '못 끝낸 일은 죄책감 없이 다음 날로 옮겨 적어보세요.',
-  '이번 달 목표는 Monthly Log에, 막연한 계획은 Future Log에.',
+  '막연한 계획은 Future Log에, 날짜가 정해지면 Daily Log로.',
+  '꾸준히 하고 싶은 일은 Routine 탭에서 잔디를 채워보세요.',
   '완료한 항목에 X 표시를 하는 순간의 성취감을 즐기세요.',
   '매일 아침 오늘의 Daily Log를 훑어보는 습관을 들여보세요.',
   '너무 많이 계획하지 마세요. 하루 3가지면 충분합니다.',

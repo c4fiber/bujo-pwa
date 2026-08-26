@@ -2,8 +2,8 @@ import { NavLink } from 'react-router-dom'
 
 const tabs = [
   { to: '/future',   label: 'Future',   icon: '◎' },
-  { to: '/monthly',  label: 'Monthly',  icon: '◈' },
   { to: '/daily',    label: 'Daily',    icon: '◦' },
+  { to: '/routine',  label: 'Routine',  icon: '▦' },
   { to: '/review',   label: 'Review',   icon: '≡' },
   { to: '/settings', label: 'Settings', icon: '⊙' },
 ]

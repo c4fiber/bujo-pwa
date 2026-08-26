@@ -1,14 +1,13 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import type { BulletType, DailyEntry, MonthlyEntry, FutureEntry, TaskStatus, EntryOrigin } from '../../types/journal'
+import type { BulletType, DailyEntry, FutureEntry, TaskStatus, EntryOrigin } from '../../types/journal'
 import { BulletIcon } from './BulletIcon'
 import { OriginBadge } from './OriginBadge'
 import { DelayDialog } from './DelayDialog'
-import { ScheduleToFutureDialog } from './ScheduleToFutureDialog'
-import { ScheduleToMonthlyDialog } from './ScheduleToMonthlyDialog'
 import { EntryActionButton } from './EntryActionButton'
+import { format } from 'date-fns'
 
-type AnyEntry = DailyEntry | MonthlyEntry | FutureEntry
+type AnyEntry = DailyEntry | FutureEntry
 
 interface Props {
   entry: AnyEntry
@@ -16,17 +15,12 @@ interface Props {
   onStatusChange?: (id: string, status: TaskStatus) => void
   onContentChange?: (id: string, content: string) => void
   onDelete?: (id: string) => void
-  // < : Daily → Monthly (월+일 선택)
-  onScheduleToMonthly?: (id: string, content: string, bulletType: BulletType, targetDate: string) => void
-  // < : Monthly → Future (연+월 선택, 일 없음)
-  onScheduleToFuture?: (id: string, content: string, bulletType: BulletType, targetYear: number, targetMonth: number) => void
-  // > : Monthly → Daily (월+일 선택)
-  onMigrateToDaily?: (id: string, content: string, bulletType: BulletType, targetDate: string) => void
-  // > : Future → Monthly (연+월 선택, 선택적으로 일 지정)
-  onScheduleToMonthlyFromFuture?: (id: string, content: string, bulletType: BulletType, targetYear: number, targetMonth: number, targetDay?: number) => void
+  // Daily 항목을 다른 날짜로 이동 (캘린더)
+  onMoveToDate?: (id: string, content: string, bulletType: BulletType, targetDate: string) => void
+  // Future 항목을 특정 날짜의 Daily로 편성 (캘린더)
+  onScheduleToDaily?: (id: string, content: string, bulletType: BulletType, targetDate: string) => void
   readOnly?: boolean
-  // 대량 목록(Review 등)에서 framer-motion layout projection으로 인한
-  // 초기 렌더 미표시 이슈를 피하기 위해 애니메이션을 끈다.
+  // 대량 목록(Review 등)에서 framer-motion layout projection 이슈를 피하기 위해 애니메이션을 끈다.
   disableMotion?: boolean
 }
 
@@ -50,20 +44,17 @@ const bgColor: Record<EntryOrigin, string> = {
 export function EntryItem({
   entry, origin = 'manual',
   onStatusChange, onContentChange, onDelete,
-  onScheduleToMonthly, onScheduleToFuture, onMigrateToDaily, onScheduleToMonthlyFromFuture,
+  onMoveToDate, onScheduleToDaily,
   readOnly, disableMotion,
 }: Props) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(entry.content)
-  const [scheduleToMonthlyOpen, setScheduleToMonthlyOpen] = useState(false)
-  const [scheduleToFutureOpen, setScheduleToFutureOpen] = useState(false)
-  const [migrateToDailyOpen, setMigrateToDailyOpen] = useState(false)
-  const [scheduleToMonthlyFromFutureOpen, setScheduleToMonthlyFromFutureOpen] = useState(false)
+  const [moveOpen, setMoveOpen] = useState(false)
+  const [scheduleOpen, setScheduleOpen] = useState(false)
 
-  const canScheduleToMonthly = !!onScheduleToMonthly && entry.bulletType === 'task'
-  const canScheduleToFuture = !!onScheduleToFuture && entry.bulletType === 'task'
-  const canMigrateToDaily = !!onMigrateToDaily && entry.bulletType === 'task'
-  const canScheduleToMonthlyFromFuture = !!onScheduleToMonthlyFromFuture && entry.bulletType === 'task'
+  const canMove = !!onMoveToDate && entry.bulletType === 'task'
+  const canSchedule = !!onScheduleToDaily && entry.bulletType === 'task'
+  const tomorrow = format(new Date(Date.now() + 86400000), 'yyyy-MM-dd')
 
   const cycleStatus = () => {
     if (!onStatusChange || entry.bulletType !== 'task') return
@@ -76,8 +67,6 @@ export function EntryItem({
       onStatusChange(entry.id, next)
     }
   }
-
-  const handleBulletClick = () => cycleStatus()
 
   const commitEdit = () => {
     setEditing(false)
@@ -112,7 +101,7 @@ export function EntryItem({
         taskStatus={entry.taskStatus}
         origin={origin}
         deferred={false}
-        onClick={handleBulletClick}
+        onClick={cycleStatus}
       />
 
       <div className="flex-1 min-w-0">
@@ -142,28 +131,16 @@ export function EntryItem({
 
       <div className="flex items-center gap-1 shrink-0">
         <OriginBadge origin={origin} />
-        {/* > : Monthly → Daily (월+일 선택) */}
-        {canMigrateToDaily && (
-          <EntryActionButton color="amber" title="Daily로 이동 >" onClick={() => setMigrateToDailyOpen(true)}>
-            &gt;
+        {/* Future → Daily 편성 (캘린더) */}
+        {canSchedule && (
+          <EntryActionButton color="green" title="Daily로 편성 (날짜 선택)" onClick={() => setScheduleOpen(true)}>
+            📅
           </EntryActionButton>
         )}
-        {/* > : Future → Monthly (연+월 선택) */}
-        {canScheduleToMonthlyFromFuture && (
-          <EntryActionButton color="blue" title="Monthly로 이동 >" onClick={() => setScheduleToMonthlyFromFutureOpen(true)}>
-            &gt;
-          </EntryActionButton>
-        )}
-        {/* < : Daily → Monthly (월+일 선택) */}
-        {canScheduleToMonthly && (
-          <EntryActionButton color="blue" title="Monthly로 예정 <" onClick={() => setScheduleToMonthlyOpen(true)}>
-            &lt;
-          </EntryActionButton>
-        )}
-        {/* < : Monthly → Future (연+월 선택) */}
-        {canScheduleToFuture && (
-          <EntryActionButton color="green" title="Future로 예약 <" onClick={() => setScheduleToFutureOpen(true)}>
-            &lt;
+        {/* Daily 항목 다른 날짜로 이동 (캘린더) */}
+        {canMove && (
+          <EntryActionButton color="amber" title="다른 날짜로 이동 (캘린더)" onClick={() => setMoveOpen(true)}>
+            📅
           </EntryActionButton>
         )}
         {onDelete && (
@@ -173,36 +150,25 @@ export function EntryItem({
         )}
       </div>
 
-      {/* Daily → Monthly (월+일 선택) */}
-      {canScheduleToMonthly && (
+      {canMove && (
         <DelayDialog
-          open={scheduleToMonthlyOpen}
-          onConfirm={targetDate => onScheduleToMonthly(entry.id, entry.content, entry.bulletType, targetDate)}
-          onClose={() => setScheduleToMonthlyOpen(false)}
+          open={moveOpen}
+          onConfirm={targetDate => onMoveToDate!(entry.id, entry.content, entry.bulletType, targetDate)}
+          onClose={() => setMoveOpen(false)}
+          title="MOVE TO DATE"
+          description="이 항목을 옮길 날짜를 선택하세요"
+          confirmLabel="이동"
         />
       )}
-      {/* Monthly → Future (연+월 선택) */}
-      {canScheduleToFuture && (
-        <ScheduleToFutureDialog
-          open={scheduleToFutureOpen}
-          onConfirm={(y, m) => onScheduleToFuture(entry.id, entry.content, entry.bulletType, y, m)}
-          onClose={() => setScheduleToFutureOpen(false)}
-        />
-      )}
-      {/* Monthly → Daily (월+일 선택) */}
-      {canMigrateToDaily && (
+      {canSchedule && (
         <DelayDialog
-          open={migrateToDailyOpen}
-          onConfirm={targetDate => onMigrateToDaily(entry.id, entry.content, entry.bulletType, targetDate)}
-          onClose={() => setMigrateToDailyOpen(false)}
-        />
-      )}
-      {/* Future → Monthly (연+월+선택적 일 선택) */}
-      {canScheduleToMonthlyFromFuture && (
-        <ScheduleToMonthlyDialog
-          open={scheduleToMonthlyFromFutureOpen}
-          onConfirm={(y, m, d) => onScheduleToMonthlyFromFuture(entry.id, entry.content, entry.bulletType, y, m, d)}
-          onClose={() => setScheduleToMonthlyFromFutureOpen(false)}
+          open={scheduleOpen}
+          onConfirm={targetDate => onScheduleToDaily!(entry.id, entry.content, entry.bulletType, targetDate)}
+          onClose={() => setScheduleOpen(false)}
+          title="SCHEDULE TO DAILY"
+          description="Daily Log에 편성할 날짜를 선택하세요"
+          confirmLabel="편성"
+          defaultDate={tomorrow}
         />
       )}
     </motion.div>

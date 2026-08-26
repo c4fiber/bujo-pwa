@@ -2,10 +2,8 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { TopBar } from './TopBar'
 import { BottomNav } from './BottomNav'
-import { useCarryForward } from '../../hooks/useCarryForward'
 
 export function AppShell() {
-  useCarryForward()
   const location = useLocation()
 
   return (

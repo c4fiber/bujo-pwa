@@ -6,9 +6,7 @@ import { firestore } from '../lib/firebase'
 import { setDoc, updateDoc, deleteDoc } from '../lib/syncedFirestore'
 import { useAuthStore } from '../store/authStore'
 import type { BulletType, DailyEntry, TaskStatus } from '../types/journal'
-import { createDailyEntry } from '../utils/entryUtils'
-import { createMonthlyLog } from '../lib/monthlyLog'
-import { parseDate } from '../utils/dateUtils'
+import { createDailyEntry, dailyEntryMovedTo } from '../utils/entryUtils'
 
 export function useDailyLog(date: string) {
   const { uid, journalId } = useAuthStore()
@@ -46,14 +44,13 @@ export function useDailyLog(date: string) {
     await deleteDoc(doc(firestore, `journals/${journalId}/dailyLogs/${id}`))
   }
 
-  // < (Schedule to Monthly): Daily → Monthly Log 생성만 트리거.
-  // 대상 날짜의 Daily Log 생성/표현은 Monthly Log 로직(createMonthlyLog)이 처리.
-  const scheduleToMonthly = async (id: string, content: string, bulletType: BulletType, targetDate: string) => {
-    if (!uid) return
-    const { year, month } = parseDate(targetDate)
-    await createMonthlyLog(journalId, { content, bulletType, year, month, scheduledDate: targetDate })
-    await updateDoc(doc(firestore, `journals/${journalId}/dailyLogs/${id}`), { taskStatus: 'scheduled' })
+  // 📅 다른 날짜로 이동: 대상 날짜에 복제(origin: migrated) 후 원본은 migrated 처리
+  const moveToDate = async (id: string, content: string, bulletType: BulletType, targetDate: string) => {
+    if (!uid || targetDate === date) return
+    const moved = dailyEntryMovedTo(content, bulletType, targetDate, id)
+    await setDoc(doc(firestore, `journals/${journalId}/dailyLogs/${moved.id}`), moved)
+    await updateDoc(doc(firestore, `journals/${journalId}/dailyLogs/${id}`), { taskStatus: 'migrated' })
   }
 
-  return { entries, addEntry, updateStatus, updateContent, deleteEntry, scheduleToMonthly }
+  return { entries, addEntry, updateStatus, updateContent, deleteEntry, moveToDate }
 }

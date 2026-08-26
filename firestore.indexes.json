@@ -26,15 +26,6 @@
       ]
     },
     {
-      "collectionGroup": "monthlyLogs",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "year", "order": "ASCENDING" },
-        { "fieldPath": "month", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "ASCENDING" }
-      ]
-    },
-    {
       "collectionGroup": "futureLogs",
       "queryScope": "COLLECTION",
       "fields": [

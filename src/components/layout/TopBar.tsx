@@ -3,8 +3,9 @@ import { useUIStore } from '../../store/uiStore'
 
 const VIEW_LABELS: Record<string, string> = {
   '/daily': 'Daily Log',
-  '/monthly': 'Monthly Log',
   '/future': 'Future Log',
+  '/routine': 'Routine',
+  '/review': 'Review',
   '/settings': 'Settings',
 }
 
