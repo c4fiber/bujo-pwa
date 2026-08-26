@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useOverdueTasks } from '../../../hooks/useOverdueTasks'
 import { formatDisplay } from '../../../utils/dateUtils'
+import { EntryActionButton } from '../../entry/EntryActionButton'
 
 export function OverdueSection({ today }: { today: string }) {
   const { overdue, bringToToday, setStatus } = useOverdueTasks(today)
@@ -50,27 +51,15 @@ export function OverdueSection({ today }: { today: string }) {
                     <p className="text-[10px] font-mono text-zinc-600 mt-0.5">{formatDisplay(entry.date)}</p>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={() => bringToToday(entry)}
-                      className="text-[11px] font-mono px-2 py-1 rounded bg-accent-amber/20 text-accent-amber hover:bg-accent-amber/30 transition-colors"
-                      title="오늘로 가져오기"
-                    >
+                    <EntryActionButton color="amber" title="오늘로 가져오기" onClick={() => bringToToday(entry)}>
                       오늘로
-                    </button>
-                    <button
-                      onClick={() => setStatus(entry.id, 'completed')}
-                      className="text-xs px-1.5 py-1 rounded text-zinc-500 hover:text-accent-green transition-colors"
-                      title="완료 처리"
-                    >
+                    </EntryActionButton>
+                    <EntryActionButton color="green" title="완료 처리" onClick={() => setStatus(entry.id, 'completed')}>
                       ✓
-                    </button>
-                    <button
-                      onClick={() => setStatus(entry.id, 'cancelled')}
-                      className="text-xs px-1.5 py-1 rounded text-zinc-500 hover:text-red-400 transition-colors"
-                      title="취소 처리"
-                    >
+                    </EntryActionButton>
+                    <EntryActionButton color="red" title="취소 처리" onClick={() => setStatus(entry.id, 'cancelled')}>
                       ✕
-                    </button>
+                    </EntryActionButton>
                   </div>
                 </div>
               ))}

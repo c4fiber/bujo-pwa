@@ -6,6 +6,7 @@ import { OriginBadge } from './OriginBadge'
 import { DelayDialog } from './DelayDialog'
 import { ScheduleToFutureDialog } from './ScheduleToFutureDialog'
 import { ScheduleToMonthlyDialog } from './ScheduleToMonthlyDialog'
+import { EntryActionButton } from './EntryActionButton'
 
 type AnyEntry = DailyEntry | MonthlyEntry | FutureEntry
 
@@ -143,52 +144,32 @@ export function EntryItem({
         <OriginBadge origin={origin} />
         {/* > : Monthly → Daily (월+일 선택) */}
         {canMigrateToDaily && (
-          <button
-            className="text-accent-amber/80 hover:text-accent-amber hover:bg-accent-amber/15 active:bg-accent-amber/25 transition-colors text-sm px-1.5 py-0.5 rounded font-mono font-bold"
-            onClick={() => setMigrateToDailyOpen(true)}
-            title="Daily로 이동 >"
-          >
+          <EntryActionButton color="amber" title="Daily로 이동 >" onClick={() => setMigrateToDailyOpen(true)}>
             &gt;
-          </button>
+          </EntryActionButton>
         )}
         {/* > : Future → Monthly (연+월 선택) */}
         {canScheduleToMonthlyFromFuture && (
-          <button
-            className="text-accent-blue/80 hover:text-accent-blue hover:bg-accent-blue/15 active:bg-accent-blue/25 transition-colors text-sm px-1.5 py-0.5 rounded font-mono font-bold"
-            onClick={() => setScheduleToMonthlyFromFutureOpen(true)}
-            title="Monthly로 이동 >"
-          >
+          <EntryActionButton color="blue" title="Monthly로 이동 >" onClick={() => setScheduleToMonthlyFromFutureOpen(true)}>
             &gt;
-          </button>
+          </EntryActionButton>
         )}
         {/* < : Daily → Monthly (월+일 선택) */}
         {canScheduleToMonthly && (
-          <button
-            className="text-accent-blue/80 hover:text-accent-blue hover:bg-accent-blue/15 active:bg-accent-blue/25 transition-colors text-sm px-1.5 py-0.5 rounded font-mono font-bold"
-            onClick={() => setScheduleToMonthlyOpen(true)}
-            title="Monthly로 예정 <"
-          >
+          <EntryActionButton color="blue" title="Monthly로 예정 <" onClick={() => setScheduleToMonthlyOpen(true)}>
             &lt;
-          </button>
+          </EntryActionButton>
         )}
         {/* < : Monthly → Future (연+월 선택) */}
         {canScheduleToFuture && (
-          <button
-            className="text-accent-green/80 hover:text-accent-green hover:bg-accent-green/15 active:bg-accent-green/25 transition-colors text-sm px-1.5 py-0.5 rounded font-mono font-bold"
-            onClick={() => setScheduleToFutureOpen(true)}
-            title="Future로 예약 <"
-          >
+          <EntryActionButton color="green" title="Future로 예약 <" onClick={() => setScheduleToFutureOpen(true)}>
             &lt;
-          </button>
+          </EntryActionButton>
         )}
         {onDelete && (
-          <button
-            className="text-zinc-500 hover:text-red-400 hover:bg-red-400/15 active:bg-red-400/25 transition-colors text-sm px-1.5 py-0.5 rounded"
-            onClick={() => onDelete(entry.id)}
-            aria-label="delete"
-          >
+          <EntryActionButton color="red" title="삭제" ariaLabel="delete" onClick={() => onDelete(entry.id)}>
             ✕
-          </button>
+          </EntryActionButton>
         )}
       </div>
 
