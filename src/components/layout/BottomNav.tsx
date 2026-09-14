@@ -1,17 +1,11 @@
 import { NavLink } from 'react-router-dom'
+import { NAV_TABS } from './navTabs'
 
-const tabs = [
-  { to: '/future',   label: 'Future',   icon: '◎' },
-  { to: '/daily',    label: 'Daily',    icon: '◦' },
-  { to: '/routine',  label: 'Routine',  icon: '▦' },
-  { to: '/review',   label: 'Review',   icon: '≡' },
-  { to: '/settings', label: 'Settings', icon: '⊙' },
-]
-
+// 좁은 화면(접힘/일반 폰): 하단 탭바. 펼침(fold+)에서는 좌측 레일로 대체되므로 숨김.
 export function BottomNav() {
   return (
-    <nav className="border-t border-surface-2 bg-surface-1 flex">
-      {tabs.map(tab => (
+    <nav className="fold:hidden border-t border-surface-2 bg-surface-1 flex">
+      {NAV_TABS.map(tab => (
         <NavLink
           key={tab.to}
           to={tab.to}

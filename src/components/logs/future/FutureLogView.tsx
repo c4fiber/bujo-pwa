@@ -29,8 +29,8 @@ export function FutureLogView() {
         <button onClick={() => setActiveYear(activeYear + 1)} className="text-zinc-500 hover:text-white text-lg px-2">›</button>
       </div>
 
-      {/* Month accordion */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Month accordion — 넓은 화면(fold+)에서는 2단 그리드 */}
+      <div className="flex-1 overflow-y-auto fold:grid fold:grid-cols-2 fold:content-start fold:gap-x-4 fold:px-2">
         {MONTHS_KO.map((label, idx) => {
           const month = idx + 1
           const monthEntries = entries.filter(e => e.month === month)

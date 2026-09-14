@@ -4,6 +4,11 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      screens: {
+        // 갤럭시 Z Fold 펼침(내부 화면, ~700px 이상)에서 확장 레이아웃 적용.
+        // 접힘(커버, ~360px)에서는 미적용.
+        fold: '700px',
+      },
       colors: {
         surface: {
           DEFAULT: '#0f0f0f',
