@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence } from 'framer-motion'
 import { useUIStore } from '../../../store/uiStore'
 import { useFutureLog } from '../../../hooks/useFutureLog'
 import { EntryItem } from '../../entry/EntryItem'
@@ -10,11 +10,7 @@ import type { BulletType } from '../../../types/journal'
 export function FutureLogView() {
   const { activeYear, setActiveYear } = useUIStore()
   const { entries, addEntry, updateStatus, updateContent, deleteEntry, scheduleToDaily } = useFutureLog(activeYear)
-  const [openMonths, setOpenMonths] = useState<number[]>([new Date().getMonth() + 1])
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1)
-
-  const toggle = (m: number) =>
-    setOpenMonths(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m])
 
   const handleAdd = (content: string, bulletType: BulletType) => {
     addEntry(content, bulletType, selectedMonth)
@@ -34,53 +30,41 @@ export function FutureLogView() {
         {MONTHS_KO.map((label, idx) => {
           const month = idx + 1
           const monthEntries = entries.filter(e => e.month === month)
-          const isOpen = openMonths.includes(month)
+          const isSelected = selectedMonth === month
 
           return (
             <div key={month} className="border-b border-surface-2">
+              {/* 월 구분 헤더 (토글 없음). 탭하면 입력 대상 월로 지정 */}
               <button
-                className="w-full flex items-center justify-between px-4 py-2 hover:bg-surface-2 transition-colors"
-                onClick={() => { toggle(month); setSelectedMonth(month) }}
+                className={`w-full flex items-center justify-between px-4 py-2 hover:bg-surface-2 transition-colors ${
+                  isSelected ? 'bg-surface-1' : ''
+                }`}
+                onClick={() => setSelectedMonth(month)}
               >
-                <span className="text-sm font-mono text-zinc-300">{label}</span>
-                <div className="flex items-center gap-2">
-                  {monthEntries.length > 0 && (
-                    <span className="text-[10px] text-zinc-600">{monthEntries.length}개</span>
-                  )}
-                  <span className="text-zinc-600 text-xs">{isOpen ? '▲' : '▼'}</span>
-                </div>
+                <span className={`text-sm font-mono ${isSelected ? 'text-accent-blue' : 'text-zinc-300'}`}>{label}</span>
+                {monthEntries.length > 0 && (
+                  <span className="text-[10px] text-zinc-600">{monthEntries.length}개</span>
+                )}
               </button>
 
-              <AnimatePresence initial={false}>
-                {isOpen && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="px-3 pb-2 space-y-1">
-                      {monthEntries.length === 0 && (
-                        <p className="text-xs text-zinc-700 py-2 pl-1">항목 없음</p>
-                      )}
-                      <AnimatePresence initial={false}>
-                        {monthEntries.map(entry => (
-                          <EntryItem
-                            key={entry.id}
-                            entry={entry}
-                            origin="manual"
-                            onStatusChange={updateStatus}
-                            onContentChange={updateContent}
-                            onDelete={deleteEntry}
-                            onScheduleToDaily={scheduleToDaily}
-                          />
-                        ))}
-                      </AnimatePresence>
-                    </div>
-                  </motion.div>
+              <div className="px-3 pb-2 space-y-1">
+                {monthEntries.length === 0 && (
+                  <p className="text-xs text-zinc-700 py-1 pl-1">항목 없음</p>
                 )}
-              </AnimatePresence>
+                <AnimatePresence initial={false}>
+                  {monthEntries.map(entry => (
+                    <EntryItem
+                      key={entry.id}
+                      entry={entry}
+                      origin="manual"
+                      onStatusChange={updateStatus}
+                      onContentChange={updateContent}
+                      onDelete={deleteEntry}
+                      onScheduleToDaily={scheduleToDaily}
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
             </div>
           )
         })}
