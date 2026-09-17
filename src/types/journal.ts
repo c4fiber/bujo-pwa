@@ -45,3 +45,20 @@ export interface RoutineLog {
   date: string;        // YYYY-MM-DD
   status: RoutineDayStatus;
 }
+
+// ── Collection (날짜 무관 주제별 목록) ──────────────────────
+export interface Collection {
+  id: string;
+  name: string;
+  order: number;
+  createdAt: string;
+}
+
+export interface CollectionItem {
+  id: string;
+  collectionId: string;
+  content: string;
+  checked: boolean;
+  order: number;
+  createdAt: string;
+}

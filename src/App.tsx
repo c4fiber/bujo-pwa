@@ -4,8 +4,8 @@ import { AppShell } from './components/layout/AppShell'
 import { DailyLogView } from './components/logs/daily/DailyLogView'
 import { FutureLogView } from './components/logs/future/FutureLogView'
 import { RoutineView } from './components/logs/routine/RoutineView'
+import { CollectionsView } from './components/logs/collections/CollectionsView'
 import { SettingsView } from './components/settings/SettingsView'
-import { ReviewView } from './components/logs/review/ReviewView'
 
 export default function App() {
   const ready = useAuthStore(s => s.ready)
@@ -26,7 +26,7 @@ export default function App() {
           <Route path="daily" element={<DailyLogView />} />
           <Route path="future" element={<FutureLogView />} />
           <Route path="routine" element={<RoutineView />} />
-          <Route path="review" element={<ReviewView />} />
+          <Route path="collections" element={<CollectionsView />} />
           <Route path="settings" element={<SettingsView />} />
           <Route path="*" element={<Navigate to="/daily" replace />} />
         </Route>

@@ -197,7 +197,7 @@ const DEV_TIPS = [
   '완료한 항목에 X 표시를 하는 순간의 성취감을 즐기세요.',
   '매일 아침 오늘의 Daily Log를 훑어보는 습관을 들여보세요.',
   '너무 많이 계획하지 마세요. 하루 3가지면 충분합니다.',
-  'Review 탭에서 한 해의 발자취를 되돌아보세요.',
+  'Lists 탭에서 읽을 책·아이디어 같은 주제별 목록을 관리하세요.',
 ]
 
 function formatRelative(epochMs: number): string {

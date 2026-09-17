@@ -5,7 +5,7 @@ const VIEW_LABELS: Record<string, string> = {
   '/daily': 'Daily Log',
   '/future': 'Future Log',
   '/routine': 'Routine',
-  '/review': 'Review',
+  '/collections': 'Collections',
   '/settings': 'Settings',
 }
 
