@@ -14,6 +14,7 @@ export function DailyLogView() {
   const { entries, addEntry, updateStatus, updateContent, deleteEntry, moveToDate } = useDailyFeed(daysBack)
   const today = toDateString(new Date())
   const rowRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const [composerDate, setComposerDate] = useState(today)
 
   // 날짜별 그룹핑
   const byDate = useMemo(() => {
@@ -139,13 +140,6 @@ export function DailyLogView() {
                   </>
                 )}
 
-                {/* 해당 날짜에 바로 추가 */}
-                <div className="pt-1">
-                  <EntryComposer
-                    onAdd={(content, bulletType) => addEntry(content, bulletType, date)}
-                    placeholder={isToday ? '오늘의 항목 입력…' : '이 날짜에 추가…'}
-                  />
-                </div>
               </div>
             </div>
           )
@@ -161,6 +155,31 @@ export function DailyLogView() {
           </button>
         </div>
       </div>
+
+      {/* 단일 입력창 — 기본값 오늘, 필요 시 날짜 지정 */}
+      <EntryComposer
+        onAdd={(content, bulletType) => addEntry(content, bulletType, composerDate)}
+        placeholder={composerDate === today ? '오늘의 항목 입력…' : '항목 입력…'}
+        extraFields={
+          <div className="flex items-center gap-2 text-xs text-zinc-600">
+            <span>날짜:</span>
+            <input
+              type="date"
+              className="bg-transparent text-zinc-400 outline-none font-mono text-xs"
+              value={composerDate}
+              onChange={e => setComposerDate(e.target.value || today)}
+            />
+            {composerDate !== today && (
+              <button
+                onClick={() => setComposerDate(today)}
+                className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-surface-2 text-zinc-400 hover:text-white transition-colors"
+              >
+                오늘로
+              </button>
+            )}
+          </div>
+        }
+      />
     </div>
   )
 }
