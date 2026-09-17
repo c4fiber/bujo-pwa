@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
-  collection, doc, onSnapshot, query, where,
+  collection, doc, onSnapshot, query, where, orderBy, limit, getDocs,
 } from 'firebase/firestore'
 import { subDays } from 'date-fns'
 import { firestore } from '../lib/firebase'
@@ -15,6 +15,8 @@ import { toDateString } from '../utils/dateUtils'
 export function useDailyFeed(daysBack: number) {
   const { uid, journalId } = useAuthStore()
   const [entries, setEntries] = useState<DailyEntry[]>([])
+  // 무한 스크롤 종료 판단용: 실제로 존재하는 가장 오래된 항목 날짜
+  const [earliestDate, setEarliestDate] = useState<string | null>(null)
 
   useEffect(() => {
     if (!uid) return
@@ -27,6 +29,19 @@ export function useDailyFeed(daysBack: number) {
       setEntries(snap.docs.map(d => d.data() as DailyEntry))
     })
   }, [uid, journalId, daysBack])
+
+  useEffect(() => {
+    if (!uid) return
+    let cancelled = false
+    getDocs(query(
+      collection(firestore, `journals/${journalId}/dailyLogs`),
+      orderBy('date', 'asc'),
+      limit(1),
+    )).then(snap => {
+      if (!cancelled) setEarliestDate(snap.empty ? null : (snap.docs[0].data() as DailyEntry).date)
+    }).catch(() => {})
+    return () => { cancelled = true }
+  }, [uid, journalId])
 
   const addEntry = async (content: string, bulletType: BulletType, date: string) => {
     if (!uid) return
@@ -59,5 +74,5 @@ export function useDailyFeed(daysBack: number) {
     await updateDoc(doc(firestore, `journals/${journalId}/dailyLogs/${id}`), { taskStatus: 'migrated' })
   }
 
-  return { entries, addEntry, updateStatus, updateContent, deleteEntry, moveToDate }
+  return { entries, earliestDate, addEntry, updateStatus, updateContent, deleteEntry, moveToDate }
 }

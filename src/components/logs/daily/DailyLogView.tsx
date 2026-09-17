@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
+import { subDays } from 'date-fns'
 import { useDailyFeed } from '../../../hooks/useDailyFeed'
 import { useUIStore } from '../../../store/uiStore'
 import { EntryItem } from '../../entry/EntryItem'
@@ -11,11 +12,27 @@ const PAGE_DAYS = 14
 
 export function DailyLogView() {
   const [daysBack, setDaysBack] = useState(PAGE_DAYS)
-  const { entries, addEntry, updateStatus, updateContent, deleteEntry, moveToDate } = useDailyFeed(daysBack)
+  const { entries, earliestDate, addEntry, updateStatus, updateContent, deleteEntry, moveToDate } = useDailyFeed(daysBack)
   const today = toDateString(new Date())
   const rowRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
   const [composerDate, setComposerDate] = useState(today)
   const dailyHome = useUIStore(s => s.dailyHome)
+
+  // 현재 로드 범위의 시작일. 이보다 오래된 실데이터가 있으면 더 로드 가능
+  const windowStart = toDateString(subDays(new Date(), daysBack))
+  const hasMore = !!earliestDate && windowStart > earliestDate
+
+  // 무한 스크롤: 하단 sentinel이 보이면 범위를 넓힌다
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el || !hasMore) return
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) setDaysBack(d => d + PAGE_DAYS)
+    }, { rootMargin: '200px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [hasMore, entries.length])
 
   // 하단 Daily 탭 재터치 시 오늘 날짜로 스크롤
   useEffect(() => {
@@ -125,14 +142,13 @@ export function DailyLogView() {
           )
         })}
 
-        {/* 페이징 */}
-        <div className="p-4 text-center">
-          <button
-            onClick={() => setDaysBack(d => d + PAGE_DAYS)}
-            className="text-xs font-mono text-zinc-500 hover:text-white px-4 py-2 rounded-lg bg-surface-2 transition-colors"
-          >
-            이전 날짜 더 보기
-          </button>
+        {/* 무한 스크롤 sentinel */}
+        <div ref={sentinelRef} className="p-4 text-center">
+          {hasMore ? (
+            <span className="text-xs font-mono text-zinc-600 animate-pulse">이전 날짜 불러오는 중…</span>
+          ) : (
+            <span className="text-xs font-mono text-zinc-700">처음까지 모두 봤어요</span>
+          )}
         </div>
       </div>
 
