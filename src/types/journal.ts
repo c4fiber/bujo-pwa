@@ -27,25 +27,6 @@ export interface FutureEntry extends BaseEntry {
   // scheduledDate 없음 — Future Log는 월 단위 기록만
 }
 
-// ── Routine ───────────────────────────────────────────────
-export type RoutineDayStatus = 'success' | 'fail';
-
-export interface Routine {
-  id: string;
-  name: string;
-  color?: string;      // 표시용(선택)
-  order: number;       // 목록 정렬용
-  createdAt: string;
-}
-
-// 루틴의 특정 날짜 달성 기록. id = `${routineId}_${date}`
-export interface RoutineLog {
-  id: string;
-  routineId: string;
-  date: string;        // YYYY-MM-DD
-  status: RoutineDayStatus;
-}
-
 // ── Collection (날짜 무관 주제별 목록) ──────────────────────
 export interface Collection {
   id: string;
@@ -59,6 +40,23 @@ export interface CollectionItem {
   collectionId: string;
   content: string;
   checked: boolean;
+  order: number;
+  createdAt: string;
+}
+
+// ── Inbox (날짜 미정 단기 backlog, 업무/고객사별 그룹) ──────────
+export interface InboxGroup {
+  id: string;
+  name: string;        // 업무 / 담당 고객사
+  order: number;
+  createdAt: string;
+}
+
+export interface InboxItem {
+  id: string;
+  groupId: string;
+  content: string;
+  deadline?: string;   // 선택적 목표 기한 YYYY-MM-DD
   order: number;
   createdAt: string;
 }

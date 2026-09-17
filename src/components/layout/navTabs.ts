@@ -6,8 +6,8 @@ export interface NavTab {
 
 export const NAV_TABS: NavTab[] = [
   { to: '/future',   label: 'Future',   icon: '◎' },
+  { to: '/inbox',    label: 'Inbox',    icon: '☐' },
   { to: '/daily',    label: 'Daily',    icon: '◦' },
-  { to: '/routine',  label: 'Routine',  icon: '▦' },
   { to: '/collections', label: 'Lists', icon: '▤' },
   { to: '/settings', label: 'Settings', icon: '⊙' },
 ]
