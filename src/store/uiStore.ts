@@ -8,6 +8,9 @@ interface UIStore {
   setActiveYear: (year: number) => void
   setActiveMonth: (month: number) => void
   setActiveDate: (date: string) => void
+  // Daily 탭 재터치 시 오늘로 이동시키는 신호(증가 카운터)
+  dailyHome: number
+  goDailyHome: () => void
 }
 
 const today = new Date()
@@ -19,4 +22,6 @@ export const useUIStore = create<UIStore>((set) => ({
   setActiveYear: (year) => set({ activeYear: year }),
   setActiveMonth: (month) => set({ activeMonth: month }),
   setActiveDate: (date) => set({ activeDate: date }),
+  dailyHome: 0,
+  goDailyHome: () => set((s) => ({ dailyHome: s.dailyHome + 1 })),
 }))

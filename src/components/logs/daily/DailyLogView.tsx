@@ -1,11 +1,11 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { useDailyFeed } from '../../../hooks/useDailyFeed'
+import { useUIStore } from '../../../store/uiStore'
 import { EntryItem } from '../../entry/EntryItem'
 import { EntryComposer } from '../../entry/EntryComposer'
 import { formatDisplay, toDateString } from '../../../utils/dateUtils'
 import type { DailyEntry } from '../../../types/journal'
-import { differenceInCalendarDays, parseISO } from 'date-fns'
 
 const PAGE_DAYS = 14
 
@@ -15,6 +15,14 @@ export function DailyLogView() {
   const today = toDateString(new Date())
   const rowRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const [composerDate, setComposerDate] = useState(today)
+  const dailyHome = useUIStore(s => s.dailyHome)
+
+  // 하단 Daily 탭 재터치 시 오늘 날짜로 스크롤
+  useEffect(() => {
+    if (dailyHome === 0) return
+    setComposerDate(today)
+    rowRefs.current[today]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [dailyHome, today])
 
   // 날짜별 그룹핑
   const byDate = useMemo(() => {
@@ -34,36 +42,8 @@ export function DailyLogView() {
     return [...set].sort((a, b) => b.localeCompare(a))
   }, [byDate, today])
 
-  const jumpTo = (date: string) => {
-    if (!date) return
-    const back = differenceInCalendarDays(new Date(), parseISO(date))
-    if (back > daysBack) setDaysBack(back + PAGE_DAYS)
-    setTimeout(() => rowRefs.current[date]?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120)
-  }
-
   return (
     <div className="flex flex-col h-full">
-      {/* 헤더: 제목 + 날짜 점프 */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-surface-2">
-        <span className="text-sm text-zinc-300 font-mono">Daily Log</span>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => jumpTo(today)}
-            className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-surface-2 text-zinc-400 hover:text-white transition-colors"
-          >
-            오늘
-          </button>
-          <label className="relative cursor-pointer text-accent-blue hover:text-accent-blue/80" title="날짜로 이동">
-            <span className="text-sm">📅</span>
-            <input
-              type="date"
-              onChange={e => jumpTo(e.target.value)}
-              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-            />
-          </label>
-        </div>
-      </div>
-
       {/* 피드 */}
       <div className="flex-1 overflow-y-auto">
         {dates.map(date => {
