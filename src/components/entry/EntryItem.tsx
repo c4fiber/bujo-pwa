@@ -140,7 +140,7 @@ export function EntryItem({
         {/* Daily 항목 다른 날짜로 이동 (캘린더) */}
         {canMove && (
           <EntryActionButton color="amber" title="다른 날짜로 이동 (캘린더)" onClick={() => setMoveOpen(true)}>
-            📅
+            <span className="font-bold">›</span>
           </EntryActionButton>
         )}
         {onDelete && (
