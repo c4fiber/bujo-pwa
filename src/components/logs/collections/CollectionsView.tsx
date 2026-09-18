@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { format } from 'date-fns'
 import { useCollections, useCollectionItems } from '../../../hooks/useCollections'
+import { DelayDialog } from '../../entry/DelayDialog'
 
 export function CollectionsView() {
   const { collections, addCollection, renameCollection, deleteCollection } = useCollections()
@@ -18,7 +20,7 @@ export function CollectionsView() {
   }, [collections, selectedId])
 
   const selected = collections.find(c => c.id === selectedId) ?? null
-  const { items, addItem, toggleItem, updateItem, deleteItem } = useCollectionItems(selectedId)
+  const { items, addItem, toggleItem, updateItem, deleteItem, scheduleToDaily } = useCollectionItems(selectedId)
   const [newItem, setNewItem] = useState('')
 
   const handleAddCollection = async () => {
@@ -113,6 +115,7 @@ export function CollectionsView() {
                   onToggle={() => toggleItem(item.id, !item.checked)}
                   onEdit={content => updateItem(item.id, content)}
                   onDelete={() => deleteItem(item.id)}
+                  onSchedule={date => scheduleToDaily(item.content, date)}
                 />
               ))}
             </AnimatePresence>
@@ -149,16 +152,19 @@ export function CollectionsView() {
 }
 
 function CollectionItemRow({
-  content, checked, onToggle, onEdit, onDelete,
+  content, checked, onToggle, onEdit, onDelete, onSchedule,
 }: {
   content: string
   checked: boolean
   onToggle: () => void
   onEdit: (content: string) => void
   onDelete: () => void
+  onSchedule: (date: string) => void
 }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(content)
+  const [scheduleOpen, setScheduleOpen] = useState(false)
+  const tomorrow = format(new Date(Date.now() + 86400000), 'yyyy-MM-dd')
 
   const commit = () => {
     setEditing(false)
@@ -205,13 +211,31 @@ function CollectionItemRow({
           </span>
         )}
       </div>
+      {/* 📅 Daily로 편성 */}
+      <button
+        onClick={() => setScheduleOpen(true)}
+        className="text-accent-blue/80 hover:text-accent-blue hover:bg-accent-blue/15 text-xs px-1.5 py-0.5 rounded transition-colors shrink-0"
+        title="날짜 정해 Daily로 편성"
+      >
+        📅
+      </button>
       <button
         onClick={onDelete}
-        className="opacity-40 group-hover:opacity-100 text-zinc-600 hover:text-red-400 text-xs px-1 transition-all"
+        className="opacity-40 group-hover:opacity-100 text-zinc-600 hover:text-red-400 text-xs px-1 transition-all shrink-0"
         aria-label="delete"
       >
         ✕
       </button>
+
+      <DelayDialog
+        open={scheduleOpen}
+        onConfirm={onSchedule}
+        onClose={() => setScheduleOpen(false)}
+        title="SCHEDULE TO DAILY"
+        description="이 항목을 처리할 날짜를 선택하세요"
+        confirmLabel="Daily로 편성"
+        defaultDate={tomorrow}
+      />
     </motion.div>
   )
 }

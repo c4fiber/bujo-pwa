@@ -28,7 +28,7 @@ export default defineConfig({
         ],
         shortcuts: [
           { name: '오늘 일지', short_name: 'Daily', url: '/daily', icons: [{ src: 'icons/icon-192.png', sizes: '192x192' }] },
-          { name: '미정함', short_name: 'Inbox', url: '/inbox', icons: [{ src: 'icons/icon-192.png', sizes: '192x192' }] },
+          { name: '목록', short_name: 'Lists', url: '/collections', icons: [{ src: 'icons/icon-192.png', sizes: '192x192' }] },
         ],
       },
       workbox: {

@@ -23,7 +23,7 @@ interface AuthStore {
   signOut: () => Promise<void>
 }
 
-const COLLECTIONS = ['dailyLogs', 'futureLogs', 'collections', 'collectionItems', 'inboxGroups', 'inboxItems'] as const
+const COLLECTIONS = ['dailyLogs', 'futureLogs', 'collections', 'collectionItems'] as const
 
 type JournalSnapshot = Record<string, { id: string; data: any }[]>
 

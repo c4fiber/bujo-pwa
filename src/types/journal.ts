@@ -44,19 +44,3 @@ export interface CollectionItem {
   createdAt: string;
 }
 
-// ── Inbox (날짜 미정 단기 backlog, 업무/고객사별 그룹) ──────────
-export interface InboxGroup {
-  id: string;
-  name: string;        // 업무 / 담당 고객사
-  order: number;
-  createdAt: string;
-}
-
-export interface InboxItem {
-  id: string;
-  groupId: string;
-  content: string;
-  deadline?: string;   // 선택적 목표 기한 YYYY-MM-DD
-  order: number;
-  createdAt: string;
-}

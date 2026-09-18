@@ -7,6 +7,7 @@ import { firestore } from '../lib/firebase'
 import { setDoc, updateDoc, deleteDoc, writeBatch } from '../lib/syncedFirestore'
 import { useAuthStore } from '../store/authStore'
 import type { Collection, CollectionItem } from '../types/journal'
+import { createDailyEntry } from '../utils/entryUtils'
 
 export function useCollections() {
   const { uid, journalId } = useAuthStore()
@@ -93,5 +94,12 @@ export function useCollectionItems(collectionId: string | null) {
     await deleteDoc(doc(firestore, `journals/${journalId}/collectionItems/${id}`))
   }
 
-  return { items, addItem, toggleItem, updateItem, deleteItem }
+  // 📅 선택한 날짜의 Daily Log에 task로 편성한다(목록 항목은 유지).
+  const scheduleToDaily = async (content: string, date: string) => {
+    if (!uid) return
+    const daily = createDailyEntry(content, 'task', date)
+    await setDoc(doc(firestore, `journals/${journalId}/dailyLogs/${daily.id}`), daily)
+  }
+
+  return { items, addItem, toggleItem, updateItem, deleteItem, scheduleToDaily }
 }

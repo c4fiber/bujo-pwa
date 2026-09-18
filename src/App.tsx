@@ -3,7 +3,6 @@ import { useAuthStore } from './store/authStore'
 import { AppShell } from './components/layout/AppShell'
 import { DailyLogView } from './components/logs/daily/DailyLogView'
 import { FutureLogView } from './components/logs/future/FutureLogView'
-import { InboxView } from './components/logs/inbox/InboxView'
 import { CollectionsView } from './components/logs/collections/CollectionsView'
 import { SettingsView } from './components/settings/SettingsView'
 
@@ -25,7 +24,6 @@ export default function App() {
           <Route index element={<Navigate to="/daily" replace />} />
           <Route path="daily" element={<DailyLogView />} />
           <Route path="future" element={<FutureLogView />} />
-          <Route path="inbox" element={<InboxView />} />
           <Route path="collections" element={<CollectionsView />} />
           <Route path="settings" element={<SettingsView />} />
           <Route path="*" element={<Navigate to="/daily" replace />} />
