@@ -3,7 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { format } from 'date-fns'
 import { useCollections, useCollectionItems, normalizeStatus, nextCollectionStatus } from '../../../hooks/useCollections'
 import { DelayDialog } from '../../entry/DelayDialog'
-import type { CollectionItem, CollectionItemStatus } from '../../../types/journal'
+import { EntryActionButton } from '../../entry/EntryActionButton'
+import type { Collection, CollectionItem, CollectionItemStatus } from '../../../types/journal'
 
 const STATUS_META: Record<CollectionItemStatus, { icon: string; color: string; label: string }> = {
   open:        { icon: '○', color: 'text-zinc-500', label: '대기' },
@@ -13,73 +14,36 @@ const STATUS_META: Record<CollectionItemStatus, { icon: string; color: string; l
 
 export function CollectionsView() {
   const { collections, addCollection, renameCollection, deleteCollection, countsByCollection } = useCollections()
-  const [openId, setOpenId] = useState<string | null>(null)
   const [newCol, setNewCol] = useState('')
 
-  const handleAddCollection = async () => {
+  const handleAddCollection = () => {
     if (!newCol.trim()) return
-    const id = await addCollection(newCol)
+    addCollection(newCol)
     setNewCol('')
-    if (id) setOpenId(id)
   }
 
-  const open = collections.find(c => c.id === openId) ?? null
-
-  if (open) {
-    return (
-      <CollectionDetail
-        collectionId={open.id}
-        name={open.name}
-        onBack={() => setOpenId(null)}
-        onRename={name => renameCollection(open.id, name)}
-        onDelete={() => { deleteCollection(open.id); setOpenId(null) }}
-      />
-    )
-  }
-
-  // ── 전체 개요: 업무/고객사가 한눈에 보이는 세로 리스트 ──
   return (
     <div className="flex flex-col h-full">
       <div className="px-4 py-3 border-b border-surface-2">
         <span className="text-sm font-mono text-zinc-300">Lists</span>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
+      {/* 모든 업무/고객사를 항상 펼친 상태로 나열 */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {collections.length === 0 && (
           <p className="text-center text-zinc-600 text-sm leading-relaxed mt-12">
             업무·고객사를 추가하고<br />진행 상황을 한눈에 확인하세요.
           </p>
         )}
-        {collections.map(c => {
-          const { total, open: openCount, inProgress, done } = countsByCollection(c.id)
-          return (
-            <button
-              key={c.id}
-              onClick={() => setOpenId(c.id)}
-              className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-surface-1 border border-surface-2 hover:border-surface-3 transition-colors text-left"
-            >
-              <span className="text-sm text-white font-medium truncate">{c.name}</span>
-              <div className="flex items-center gap-2 shrink-0 ml-2">
-                {inProgress > 0 && (
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-accent-amber/20 text-accent-amber">
-                    진행중 {inProgress}
-                  </span>
-                )}
-                {openCount > 0 && (
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-surface-2 text-zinc-400">
-                    대기 {openCount}
-                  </span>
-                )}
-                {total === 0 && (
-                  <span className="text-[10px] font-mono text-zinc-700">비어있음</span>
-                )}
-                {total > 0 && inProgress === 0 && openCount === 0 && (
-                  <span className="text-[10px] font-mono text-accent-green">전체 완료 ({done})</span>
-                )}
-              </div>
-            </button>
-          )
-        })}
+        {collections.map(c => (
+          <CollectionSection
+            key={c.id}
+            collection={c}
+            counts={countsByCollection(c.id)}
+            onRename={name => renameCollection(c.id, name)}
+            onDelete={() => { if (confirm(`'${c.name}' 목록을 삭제할까요?`)) deleteCollection(c.id) }}
+          />
+        ))}
       </div>
 
       {/* 새 업무/고객사 추가 */}
@@ -103,20 +67,20 @@ export function CollectionsView() {
   )
 }
 
-function CollectionDetail({
-  collectionId, name, onBack, onRename, onDelete,
+function CollectionSection({
+  collection, counts, onRename, onDelete,
 }: {
-  collectionId: string
-  name: string
-  onBack: () => void
+  collection: Collection
+  counts: { total: number; open: number; inProgress: number; done: number }
   onRename: (name: string) => void
   onDelete: () => void
 }) {
-  const { items, addItem, setStatus, updateItem, deleteItem, scheduleToDaily } = useCollectionItems(collectionId)
-  const [newItem, setNewItem] = useState('')
+  const { items, addItem, setStatus, updateItem, deleteItem, scheduleToDaily } = useCollectionItems(collection.id)
   const [showDone, setShowDone] = useState(false)
   const [editingName, setEditingName] = useState(false)
-  const [editName, setEditName] = useState(name)
+  const [editName, setEditName] = useState(collection.name)
+  const [addOpen, setAddOpen] = useState(false)
+  const [newItem, setNewItem] = useState('')
 
   const active = items.filter(i => normalizeStatus(i) !== 'done')
   const done = items.filter(i => normalizeStatus(i) === 'done')
@@ -128,10 +92,10 @@ function CollectionDetail({
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-surface-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <button onClick={onBack} className="text-zinc-500 hover:text-white text-lg px-1 shrink-0">‹</button>
+    <div className="rounded-xl bg-surface-1 border border-surface-2 overflow-hidden">
+      {/* 헤더: 이름 + 진행 배지 + 항목추가 + 삭제 */}
+      <div className="flex items-center justify-between px-3 py-2.5 border-b border-surface-2 gap-2">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           {editingName ? (
             <input
               autoFocus
@@ -147,22 +111,75 @@ function CollectionDetail({
           ) : (
             <span
               className="text-sm text-white font-medium truncate cursor-text"
-              onDoubleClick={() => { setEditingName(true); setEditName(name) }}
+              onDoubleClick={() => { setEditingName(true); setEditName(collection.name) }}
             >
-              {name}
+              {collection.name}
             </span>
           )}
+          {counts.inProgress > 0 && (
+            <span className="shrink-0 text-[10px] font-mono px-1.5 py-0.5 rounded bg-accent-amber/20 text-accent-amber">
+              진행중 {counts.inProgress}
+            </span>
+          )}
+          {counts.open > 0 && (
+            <span className="shrink-0 text-[10px] font-mono px-1.5 py-0.5 rounded bg-surface-2 text-zinc-400">
+              대기 {counts.open}
+            </span>
+          )}
+          {counts.total > 0 && counts.inProgress === 0 && counts.open === 0 && (
+            <span className="shrink-0 text-[10px] font-mono text-accent-green">완료 {counts.done}</span>
+          )}
         </div>
-        <button
-          onClick={() => { if (confirm(`'${name}' 목록을 삭제할까요?`)) onDelete() }}
-          className="text-zinc-600 hover:text-red-400 text-xs px-1 transition-colors shrink-0"
-          aria-label="delete collection"
-        >
-          ✕
-        </button>
+        <div className="flex items-center gap-1 shrink-0">
+          <EntryActionButton color="blue" title="항목 추가" ariaLabel="add item" onClick={() => setAddOpen(o => !o)}>
+            +
+          </EntryActionButton>
+          <button
+            onClick={onDelete}
+            className="text-zinc-600 hover:text-red-400 text-xs px-1 transition-colors"
+            aria-label="delete collection"
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 space-y-1">
+      {/* 헤더 '+' 로 열리는 인라인 항목 추가 */}
+      <AnimatePresence initial={false}>
+        {addOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="overflow-hidden border-b border-surface-2"
+          >
+            <div className="flex items-center gap-2 px-3 py-2">
+              <input
+                autoFocus
+                className="flex-1 bg-transparent text-sm text-white placeholder-zinc-600 outline-none"
+                placeholder="항목 추가…"
+                value={newItem}
+                onChange={e => setNewItem(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.nativeEvent.isComposing) { handleAddItem() }
+                  if (e.key === 'Escape') setAddOpen(false)
+                }}
+              />
+              <button
+                onClick={handleAddItem}
+                disabled={!newItem.trim()}
+                className="text-xs text-zinc-500 hover:text-white disabled:opacity-30 transition-colors px-1 shrink-0"
+              >
+                추가
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 항목 목록 (항상 펼침) */}
+      <div className="px-3 py-2 space-y-1">
         <AnimatePresence initial={false}>
           {active.map(item => (
             <CollectionItemRow
@@ -176,12 +193,12 @@ function CollectionDetail({
           ))}
         </AnimatePresence>
         {active.length === 0 && done.length === 0 && (
-          <p className="text-center text-zinc-700 text-sm mt-10">항목을 추가하세요</p>
+          <p className="text-xs text-zinc-700 py-1 pl-1">항목 없음</p>
         )}
 
         {/* 완료 항목은 접어서 깔끔하게 유지 */}
         {done.length > 0 && (
-          <div className="pt-2">
+          <div className="pt-1">
             <button
               onClick={() => setShowDone(s => !s)}
               className="text-[10px] font-mono text-zinc-600 hover:text-zinc-400 px-1 py-1 transition-colors"
@@ -212,23 +229,6 @@ function CollectionDetail({
             </AnimatePresence>
           </div>
         )}
-      </div>
-
-      <div className="border-t border-surface-2 bg-surface-1 px-3 py-2 flex items-center gap-2">
-        <input
-          className="flex-1 bg-transparent text-sm text-white placeholder-zinc-600 outline-none"
-          placeholder="항목 추가…"
-          value={newItem}
-          onChange={e => setNewItem(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) handleAddItem() }}
-        />
-        <button
-          onClick={handleAddItem}
-          disabled={!newItem.trim()}
-          className="text-xs text-zinc-500 hover:text-white disabled:opacity-30 transition-colors px-1"
-        >
-          추가
-        </button>
       </div>
     </div>
   )
@@ -263,7 +263,7 @@ function CollectionItemRow({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -20 }}
       transition={{ duration: 0.15 }}
-      className="flex items-center gap-2 px-3 py-2 rounded bg-surface-1 border-l-2 border-l-surface-3 group"
+      className="flex items-center gap-2 px-3 py-2 rounded bg-surface-2/40 border-l-2 border-l-surface-3 group"
     >
       {/* 상태(대기→진행중→완료) 순환 버튼 */}
       <button
