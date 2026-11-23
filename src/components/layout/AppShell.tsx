@@ -3,10 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { TopBar } from './TopBar'
 import { BottomNav } from './BottomNav'
 import { SideNav } from './SideNav'
-import { useCarryForward } from '../../hooks/useCarryForward'
 
 export function AppShell() {
-  useCarryForward()
   const location = useLocation()
 
   return (

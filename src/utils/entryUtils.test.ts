@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createDailyEntry, createFutureEntry, dailyEntryFromFuture, dailyEntryMovedTo } from './entryUtils'
+import { createDailyEntry, createFutureEntry, dailyEntryFromFuture } from './entryUtils'
 
 describe('createDailyEntry', () => {
   it('날짜 문자열로부터 year/month/day를 파싱한다', () => {
@@ -38,15 +38,5 @@ describe('dailyEntryFromFuture', () => {
     expect(daily.sourceId).toBe(future.id)
     expect(daily.id).not.toBe(future.id)
     expect(daily.content).toBe('발표 준비')
-  })
-})
-
-describe('dailyEntryMovedTo', () => {
-  it('다른 날짜로 이동한 항목은 origin migrated + sourceId를 가진다', () => {
-    const moved = dailyEntryMovedTo('물 마시기', 'task', '2026-06-20', 'src-1')
-    expect(moved.date).toBe('2026-06-20')
-    expect(moved.origin).toBe('migrated')
-    expect(moved.sourceId).toBe('src-1')
-    expect(moved.taskStatus).toBe('open')
   })
 })
