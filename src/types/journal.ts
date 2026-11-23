@@ -27,7 +27,7 @@ export interface FutureEntry extends BaseEntry {
   // scheduledDate 없음 — Future Log는 월 단위 기록만
 }
 
-// ── Collection (날짜 무관 주제별 목록) ──────────────────────
+// ── Collection (업무/고객사별 진행 목록) ──────────────────────
 export interface Collection {
   id: string;
   name: string;
@@ -35,11 +35,15 @@ export interface Collection {
   createdAt: string;
 }
 
+export type CollectionItemStatus = 'open' | 'in_progress' | 'done';
+
 export interface CollectionItem {
   id: string;
   collectionId: string;
   content: string;
-  checked: boolean;
+  status: CollectionItemStatus;
+  // 과거 체크박스(boolean) 데이터 호환용 — status가 없을 때만 참조
+  checked?: boolean;
   order: number;
   createdAt: string;
 }

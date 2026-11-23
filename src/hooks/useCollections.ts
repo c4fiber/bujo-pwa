@@ -6,12 +6,24 @@ import { nanoid } from 'nanoid'
 import { firestore } from '../lib/firebase'
 import { setDoc, updateDoc, deleteDoc, writeBatch } from '../lib/syncedFirestore'
 import { useAuthStore } from '../store/authStore'
-import type { Collection, CollectionItem } from '../types/journal'
+import type { Collection, CollectionItem, CollectionItemStatus } from '../types/journal'
 import { createDailyEntry } from '../utils/entryUtils'
+
+// 레거시 boolean(checked) 데이터를 status로 환산
+export function normalizeStatus(item: CollectionItem): CollectionItemStatus {
+  if (item.status) return item.status
+  return item.checked ? 'done' : 'open'
+}
+
+const STATUS_CYCLE: CollectionItemStatus[] = ['open', 'in_progress', 'done']
+export const nextCollectionStatus = (cur: CollectionItemStatus): CollectionItemStatus =>
+  STATUS_CYCLE[(STATUS_CYCLE.indexOf(cur) + 1) % STATUS_CYCLE.length]
 
 export function useCollections() {
   const { uid, journalId } = useAuthStore()
   const [collections, setCollections] = useState<Collection[]>([])
+  // 전체 개요용: 모든 collectionItems를 한 번에 구독해 컬렉션별 상태 카운트를 집계
+  const [allItems, setAllItems] = useState<CollectionItem[]>([])
 
   useEffect(() => {
     if (!uid) return
@@ -21,6 +33,13 @@ export function useCollections() {
           .map(d => d.data() as Collection)
           .sort((a, b) => a.order - b.order || a.createdAt.localeCompare(b.createdAt))
       )
+    })
+  }, [uid, journalId])
+
+  useEffect(() => {
+    if (!uid) return
+    return onSnapshot(collection(firestore, `journals/${journalId}/collectionItems`), snap => {
+      setAllItems(snap.docs.map(d => d.data() as CollectionItem))
     })
   }, [uid, journalId])
 
@@ -48,7 +67,20 @@ export function useCollections() {
     await wb.commit()
   }
 
-  return { collections, addCollection, renameCollection, deleteCollection }
+  // 컬렉션별 상태 카운트 (개요 화면용)
+  const countsByCollection = (collectionId: string) => {
+    const items = allItems.filter(i => i.collectionId === collectionId)
+    let open = 0, inProgress = 0, done = 0
+    for (const i of items) {
+      const s = normalizeStatus(i)
+      if (s === 'open') open++
+      else if (s === 'in_progress') inProgress++
+      else done++
+    }
+    return { total: items.length, open, inProgress, done }
+  }
+
+  return { collections, addCollection, renameCollection, deleteCollection, countsByCollection }
 }
 
 export function useCollectionItems(collectionId: string | null) {
@@ -73,15 +105,15 @@ export function useCollectionItems(collectionId: string | null) {
   const addItem = async (content: string) => {
     if (!uid || !collectionId || !content.trim()) return
     const item: CollectionItem = {
-      id: nanoid(), collectionId, content: content.trim(), checked: false,
+      id: nanoid(), collectionId, content: content.trim(), status: 'open',
       order: items.length, createdAt: new Date().toISOString(),
     }
     await setDoc(doc(firestore, `journals/${journalId}/collectionItems/${item.id}`), item)
   }
 
-  const toggleItem = async (id: string, checked: boolean) => {
+  const setStatus = async (id: string, status: CollectionItemStatus) => {
     if (!uid) return
-    await updateDoc(doc(firestore, `journals/${journalId}/collectionItems/${id}`), { checked })
+    await updateDoc(doc(firestore, `journals/${journalId}/collectionItems/${id}`), { status })
   }
 
   const updateItem = async (id: string, content: string) => {
@@ -101,5 +133,5 @@ export function useCollectionItems(collectionId: string | null) {
     await setDoc(doc(firestore, `journals/${journalId}/dailyLogs/${daily.id}`), daily)
   }
 
-  return { items, addItem, toggleItem, updateItem, deleteItem, scheduleToDaily }
+  return { items, addItem, setStatus, updateItem, deleteItem, scheduleToDaily }
 }
