@@ -128,7 +128,6 @@ export function DailyLogView() {
                         key={entry.id}
                         entry={entry}
                         origin="migrated"
-                        onStatusChange={updateStatus}
                         onDelete={deleteEntry}
                         readOnly
                         disableMotion

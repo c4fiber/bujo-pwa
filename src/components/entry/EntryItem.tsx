@@ -101,7 +101,7 @@ export function EntryItem({
         taskStatus={entry.taskStatus}
         origin={origin}
         deferred={false}
-        onClick={cycleStatus}
+        onClick={onStatusChange ? cycleStatus : undefined}
       />
 
       <div className="flex-1 min-w-0">
