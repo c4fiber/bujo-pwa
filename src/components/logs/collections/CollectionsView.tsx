@@ -76,14 +76,16 @@ function CollectionSection({
   onDelete: () => void
 }) {
   const { items, addItem, setStatus, updateItem, deleteItem, scheduleToDaily } = useCollectionItems(collection.id)
-  const [showDone, setShowDone] = useState(false)
   const [editingName, setEditingName] = useState(false)
   const [editName, setEditName] = useState(collection.name)
   const [addOpen, setAddOpen] = useState(false)
   const [newItem, setNewItem] = useState('')
 
-  const active = items.filter(i => normalizeStatus(i) !== 'done')
-  const done = items.filter(i => normalizeStatus(i) === 'done')
+  // 완료 항목도 삭제/숨김하지 않고 그대로 보여준다 — 정렬만 아래로
+  const sorted = [
+    ...items.filter(i => normalizeStatus(i) !== 'done'),
+    ...items.filter(i => normalizeStatus(i) === 'done'),
+  ]
 
   const handleAddItem = () => {
     if (!newItem.trim()) return
@@ -181,7 +183,7 @@ function CollectionSection({
       {/* 항목 목록 (항상 펼침) */}
       <div className="px-3 py-2 space-y-1">
         <AnimatePresence initial={false}>
-          {active.map(item => (
+          {sorted.map(item => (
             <CollectionItemRow
               key={item.id}
               item={item}
@@ -192,42 +194,8 @@ function CollectionSection({
             />
           ))}
         </AnimatePresence>
-        {active.length === 0 && done.length === 0 && (
+        {sorted.length === 0 && (
           <p className="text-xs text-zinc-700 py-1 pl-1">항목 없음</p>
-        )}
-
-        {/* 완료 항목은 접어서 깔끔하게 유지 */}
-        {done.length > 0 && (
-          <div className="pt-1">
-            <button
-              onClick={() => setShowDone(s => !s)}
-              className="text-[10px] font-mono text-zinc-600 hover:text-zinc-400 px-1 py-1 transition-colors"
-            >
-              {showDone ? '▲' : '▼'} 완료 {done.length}개
-            </button>
-            <AnimatePresence initial={false}>
-              {showDone && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                  className="overflow-hidden space-y-1"
-                >
-                  {done.map(item => (
-                    <CollectionItemRow
-                      key={item.id}
-                      item={item}
-                      onCycleStatus={() => setStatus(item.id, nextCollectionStatus(normalizeStatus(item)))}
-                      onEdit={content => updateItem(item.id, content)}
-                      onDelete={() => deleteItem(item.id)}
-                      onSchedule={date => scheduleToDaily(item.content, date)}
-                    />
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
         )}
       </div>
     </div>
@@ -295,21 +263,15 @@ function CollectionItemRow({
           </span>
         )}
       </div>
-      {/* 📅 Daily로 편성 */}
-      <button
-        onClick={() => setScheduleOpen(true)}
-        className="text-accent-blue/80 hover:text-accent-blue hover:bg-accent-blue/15 text-xs px-1.5 py-0.5 rounded transition-colors shrink-0"
-        title="날짜 정해 Daily로 편성"
-      >
-        📅
-      </button>
-      <button
-        onClick={onDelete}
-        className="opacity-40 group-hover:opacity-100 text-zinc-600 hover:text-red-400 text-xs px-1 transition-all shrink-0"
-        aria-label="delete"
-      >
-        ✕
-      </button>
+      {/* Daily와 동일한 액션 버튼: 📅 편성 / ✕ 삭제 (항상 보임) */}
+      <div className="flex items-center gap-1 shrink-0">
+        <EntryActionButton color="blue" title="날짜 정해 Daily로 편성" onClick={() => setScheduleOpen(true)}>
+          📅
+        </EntryActionButton>
+        <EntryActionButton color="red" title="삭제" ariaLabel="delete" onClick={onDelete}>
+          ✕
+        </EntryActionButton>
+      </div>
 
       <DelayDialog
         open={scheduleOpen}
